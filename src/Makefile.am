@@ -433,6 +433,8 @@ neko_fortran_SOURCES = \
 	wall_models/spalding.f90\
 	wall_models/bcknd/cpu/spalding_cpu.f90\
 	wall_models/bcknd/device/spalding_device.F90\
+	wall_models/bcknd/cpu/reichardt_cpu.f90\
+	wall_models/reichardt.f90\
 	wall_models/rough_log_law.f90\
 	wall_models/bcknd/cpu/rough_log_law_cpu.f90\
 	wall_models/bcknd/device/rough_log_law_device.F90\
@@ -442,6 +444,8 @@ neko_fortran_SOURCES = \
 	wall_models/richardson.f90\
 	wall_models/bcknd/cpu/richardson_cpu.f90\
 	wall_models/bcknd/device/richardson_device.F90\
+	wall_models/bcknd/cpu/duprat_cpu.f90\
+	wall_models/duprat.f90\
 	wall_models/wall_model_fctry.f90\
 	neko.f90
 

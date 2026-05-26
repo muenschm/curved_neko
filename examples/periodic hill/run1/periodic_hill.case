@@ -1,0 +1,100 @@
+{
+    "version": 1.0,
+    "case":
+    {
+        "mesh_file": "box.nmsh",
+        "output_boundary": true,
+        "output_checkpoints": false,
+        "a_checkpoint_control": "tsteps",
+        "a_checkpoint_value": 10000,
+        "a_restart_file": "last.chkp",
+        "time": {
+            "end_time": 300.0,
+            "timestep": 1e-4,
+            "variable_timestep": false,
+            "target_cfl": 0.5
+        },
+        "numerics": {
+            "time_order": 3,
+            "polynomial_order": 7,
+            "dealias": true
+        },
+        "fluid": {
+            "scheme": "pnpn",
+            "Re": 10595.0,
+            "nut_field" : "nut",
+	    "full_stress_formulation": true, 
+            "gradient_jump_penalty": {
+               "enabled": true,
+               "scaling_factor": 0.8
+            },
+            "initial_condition": {
+            "type": "user"
+            },
+            "velocity_solver": {
+                "a_type": "cg",
+                "type": "coupled_cg",
+                "preconditioner": {
+		    "type": "jacobi"
+		},    
+                "projection_space_size": 0,
+                "absolute_tolerance": 1e-8,
+                "max_iterations": 800
+            },
+            "pressure_solver": {
+                "type": "gmres",
+                "preconditioner": {
+		    "type": "hsmg"
+		},
+                "projection_space_size": 20,
+                "absolute_tolerance": 1e-5,
+                "max_iterations": 800
+            },
+
+           "boundary_conditions":
+	    [
+              {
+                "type": "wall_model",
+                "zone_indices": [ 3, 4 ],
+                "model": "duprat",
+                "kappa": 0.41,
+                "beta": 0.78,
+                "A": 17.0,
+                "h_index": 1,
+                "t_filter_start": 50.0,
+                "use_constant_dpdx": false
+              }
+            ],
+          "output_control": "simulationtime",
+          "output_value": "1.0",
+          "a_output_control": "tsteps",
+          "a_output_value": "10",
+          "flow_rate_force": {
+                "direction": 1,
+                "value": 0.720958089547410,
+                "use_averaged_flow": true
+           }
+        },
+        "simulation_components": 
+        [
+           {
+            "type" : "les_model",
+            "model" : "sigma",
+            "output_filename" : "les",
+            "output_control" : "global",
+            "nut_field" : "nut",
+	    "delta_type" : "pointwise"
+           },
+           {
+            "type": "fluid_stats",
+            "compute_control": "tsteps",
+            "compute_value": 10,
+            "output_control": "simulationtime",
+            "output_value": 1.0,
+            "start_time": 150.0,
+            "avg_direction":"z",
+            "set_of_stats":"basic"
+           }	
+      ]
+  }
+}
