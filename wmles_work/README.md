@@ -33,11 +33,11 @@ branch `claude/stoic-euler-8zyrhx` after every turn. A Claude Code Stop hook in
   - `duprat/periodic_hill_duprat_restart.case`: the same case with
     `"restart_file": "last.chkp"` active, for continuing from a checkpoint
     (as in the second Fritz job).
-  - `periodic_hill.case`: the Reichardt case (C = 7.8, B1 = 11, B2 = 3). It
-    was rebuilt from the Duprat case after the original was lost, so it
-    differs only in the wall-model block and has no `user_stats`.
-  - Both cases restart via `"restart_file"`; the key is disabled as
-    `"a_restart_file"` for a fresh start.
+  - `periodic_hill.case`: the Reichardt production case (C = 7.8, B1 = 11,
+    B2 = 3), as run on Fritz and Alex. It has `"restart_file": "last.chkp"`
+    active.
+  - For a fresh start, disable the restart key by renaming it to
+    `"a_restart_file"`.
   - `forces_from_log.py`: extracts the `force_torque` and flow-rate output
     from Neko logs into CSV.
   - `analysis/gpu_cpu_windows.py`: compares two runs window by window. It
