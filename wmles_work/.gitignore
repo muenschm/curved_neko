@@ -1,0 +1,9 @@
+# Large simulation data stays out of git; the autosave also skips any file
+# above 20 MB.
+*.f[0-9][0-9][0-9][0-9][0-9]
+*.chkp
+*.nmsh
+*.tar.gz
+*.zip
+log_*
+build*/
