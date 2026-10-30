@@ -30,6 +30,9 @@ branch `claude/stoic-euler-8zyrhx` after every turn. A Claude Code Stop hook in
     (`pressure_gradient` local, `filter_time` 1, `start_time` 50). It also
     has `user_stats` of `tau`, `duprat_dpds` and `duprat_alpha`, written to
     `wall_stats2d`.
+  - `duprat/periodic_hill_duprat_restart.case`: the same case with
+    `"restart_file": "last.chkp"` active, for continuing from a checkpoint
+    (as in the second Fritz job).
   - `periodic_hill.case`: the Reichardt case (C = 7.8, B1 = 11, B2 = 3). It
     was rebuilt from the Duprat case after the original was lost, so it
     differs only in the wall-model block and has no `user_stats`.
