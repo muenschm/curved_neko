@@ -47,7 +47,23 @@ Coarse hill (22x8x8 elements, N = 5, statistics t = 20...40,
 | old (`feature/duprat-wall-model`) | 1.07 | 2.88 | 0.00166 | 1.7 |
 | new, 50b9589 (A+B, Stokes bound) | 1.06 | 3.72 | 0.00194 | 0.6 |
 | A+B without Stokes bound | 0.88 | 4.48 | 0.00330 | 1.1 |
-| bcb0e5a (paper: no bound, reversed stress) | running | | | |
+| bcb0e5a (paper: no bound, reversed stress) | 0.79 | 5.06 | 0.00368 | 0.8 |
+
+References: Breuer et al. 0.19 / 4.69; Duprat et al. grid A 0.38 / 4.65,
+grid B 0.45 / 3.92, grid C 0.68 / 2.97. The bcb0e5a run is stable (no NaN).
+Ratio of the model <|dp/ds|> to the gradient of the mean pressure:
+
+| run | crest | bubble | recovery | windward |
+|---|---|---|---|---|
+| old | 0.45 | 0.21 | 0.06 | 0.33 |
+| new, 50b9589 | 0.52 | 0.21 | 0.07 | 0.35 |
+| A+B without Stokes bound | 0.94 | 0.56 | 0.35 | 1.04 |
+| bcb0e5a | 0.88 | 0.56 | 0.63 | 1.06 |
+
+Only one coarse run per variant with 20 time units of averaging; the
+differences of about 0.1 in sep/reatt are within the statistical
+uncertainty. The trend: without the bound and with the reversed stress the
+bubble grows, separation moves upstream, reattachment downstream.
 
 The Stokes bound, not the projection, was the main reason the model saw too
 little pressure gradient. Earlier statements ("about a tenth because of the
