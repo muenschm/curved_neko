@@ -12,3 +12,4 @@ build*/
 *.log
 *.out
 *.toc
+__pycache__/
