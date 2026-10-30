@@ -1,0 +1,151 @@
+{
+  "version": 1.0,
+  "case": {
+    "mesh_file": "box.nmsh",
+    "output_at_end": true,
+    "output_boundary": true,
+    "output_checkpoints": true,
+    "checkpoint_control": "tsteps",
+    "checkpoint_value": 5000,
+    "a_restart_file": "last.chkp",
+    "job_timelimit": "23:45:00",
+    "time": {
+      "end_time": 600.0,
+      "variable_timestep": true,
+      "target_cfl": 0.5,
+      "max_timestep": 0.1
+    },
+    "numerics": {
+      "time_order": 3,
+      "polynomial_order": 8,
+      "dealias": true
+    },
+    "fluid": {
+      "scheme": "pnpn",
+      "Re": 10595.0,
+      "initial_condition": {
+        "type": "user"
+      },
+      "velocity_solver": {
+        "type": "coupled_cg",
+        "preconditioner": {
+          "type": "jacobi"
+        },
+        "projection_space_size": 0,
+        "absolute_tolerance": 1e-08,
+        "max_iterations": 800
+      },
+      "pressure_solver": {
+        "type": "gmres",
+        "preconditioner": {
+          "type": "hsmg"
+        },
+        "projection_space_size": 20,
+        "absolute_tolerance": 1e-05,
+        "max_iterations": 800
+      },
+      "flow_rate_force": {
+        "direction": 1,
+        "value": 0.72095808954741,
+        "use_averaged_flow": true
+      },
+      "source_terms": [
+        {
+          "type": "gradient_jump_penalty",
+          "scaling_factor": 0.8
+        }
+      ],
+      "boundary_conditions": [
+        {
+          "type": "wall_model",
+          "zone_indices": [
+            3,
+            4
+          ],
+          "model": "duprat",
+          "kappa": 0.41,
+          "beta": 0.78,
+          "A": 17.0,
+          "pressure_gradient": {
+            "type": "local",
+            "filter_time": 1.0,
+            "start_time": 50.0
+          },
+          "sampling": {
+            "type": "gll",
+            "value": 3
+          }
+        }
+      ],
+      "nut_field": "nut",
+      "full_stress_formulation": true,
+      "output_control": "simulationtime",
+      "output_value": 50.0
+    },
+    "simulation_components": [
+      {
+        "type": "fluid_stats",
+        "output_control": "simulationtime",
+        "output_value": 50.0,
+        "start_time": 150.0,
+        "compute_control": "tsteps",
+        "compute_value": 10,
+        "set_of_stats": "basic",
+        "avg_direction": "z",
+        "output_filename": "fluid_stats2d"
+      },
+      {
+        "type": "user_stats",
+        "name": "wall_stats",
+        "fields": [
+          "tau",
+          "duprat_dpds",
+          "duprat_alpha"
+        ],
+        "avg_direction": "z",
+        "start_time": 150.0,
+        "compute_control": "tsteps",
+        "compute_value": 10,
+        "output_control": "simulationtime",
+        "output_value": 50.0,
+        "output_filename": "wall_stats2d"
+      },
+      {
+        "type": "les_model",
+        "model": "vreman",
+        "nut_field": "nut",
+        "c": 0.07
+      },
+      {
+        "type": "force_torque",
+        "name": "force_bottom",
+        "zone_id": 3,
+        "zone_name": "bottom wall (hill)",
+        "center": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": 0.0493827160493827,
+        "long_print": true,
+        "compute_control": "tsteps",
+        "compute_value": 10
+      },
+      {
+        "type": "force_torque",
+        "name": "force_top",
+        "zone_id": 4,
+        "zone_name": "top wall",
+        "center": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": 0.0493827160493827,
+        "long_print": true,
+        "compute_control": "tsteps",
+        "compute_value": 10
+      }
+    ]
+  }
+}

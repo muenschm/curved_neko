@@ -23,7 +23,18 @@ branch `claude/stoic-euler-8zyrhx` after every turn. A Claude Code Stop hook in
 - `report/`: the WMLES report, `wmles_report.tex` with `figures/`, and the
   PDF built from it (`pdflatex` twice). It includes the periodic-hill results
   for Reichardt and Duprat and the removal of the GPU warnings.
-- `periodic_hill/`: the periodic-hill case and its evaluation.
+- `periodic_hill/`: the periodic-hill case at Re_h = 10595 and its evaluation.
+  - `periodic_hill.f90`: user file with mesh deformation and initial
+    condition. It also sets `p`, as current Neko requires.
+  - `duprat/periodic_hill_duprat.case`: the Duprat production case
+    (`pressure_gradient` local, `filter_time` 1, `start_time` 50). It also
+    has `user_stats` of `tau`, `duprat_dpds` and `duprat_alpha`, written to
+    `wall_stats2d`.
+  - `periodic_hill.case`: the Reichardt case (C = 7.8, B1 = 11, B2 = 3). It
+    was rebuilt from the Duprat case after the original was lost, so it
+    differs only in the wall-model block and has no `user_stats`.
+  - Both cases restart via `"restart_file"`; the key is disabled as
+    `"a_restart_file"` for a fresh start.
   - `forces_from_log.py`: extracts the `force_torque` and flow-rate output
     from Neko logs into CSV.
   - `analysis/gpu_cpu_windows.py`: compares two runs window by window. It
@@ -34,8 +45,8 @@ branch `claude/stoic-euler-8zyrhx` after every turn. A Claude Code Stop hook in
 
 The container reset on 30 Oct 2026 deleted these files before they were
 saved here:
-- the case files (`periodic_hill.case`, the Duprat case, `periodic_hill.f90`,
-  `CHANGES.md`, `gpu_cpu_check/`);
+- `periodic_hill/CHANGES.md` and the deterministic GPU/CPU test
+  `periodic_hill/gpu_cpu_check/`;
 - the evaluation scripts `analysis/ph_stats.py` and `analysis/ph_forces.py`,
   with the results folders.
 
