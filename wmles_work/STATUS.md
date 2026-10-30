@@ -22,6 +22,22 @@ Done (commit 50b9589, not yet built or tested):
   (update kernel with eps = 1). The device kernels are unchanged.
 - User guide updated.
 
+Test on a coarse hill (22x8x8 elements, N = 5, statistics t = 20...40,
+`analysis/wall_dpds_check.py`), old (`feature/duprat-wall-model`) against
+new (50b9589):
+- (A) works. The median spike of <alpha> at element boundaries drops from
+  8.4e-3 to 1.0e-3 (ratio to interior nodes 1.7 -> 0.6); for <dp/ds> the
+  ratio goes from 1.6 to 1.0.
+- (B) changes little. The Stokes bound dp_max = rho/nu (u nu/h)^1.5 limits
+  dp/ds along almost the whole wall:
+  - bubble and recovery (x/h 1...7): bound 1e-4...1e-2 against |d<p>/ds|
+    0.01...0.09;
+  - crest and windward face: model dp/ds is about equal to the bound.
+  The bound, not the projection, is the main reason the model sees too
+  little pressure gradient. Earlier statements ("about a tenth because of
+  the projection") are to be corrected in the report and the #2888 text.
+- Running: a variant without the Stokes bound (scratch build only).
+
 Open:
 - Build environment after the container reset: the json-fortran and pFUnit
   source builds need the user's approval.

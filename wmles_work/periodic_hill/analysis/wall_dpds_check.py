@@ -7,8 +7,8 @@ Usage:
 RUNDIR holds the z-averaged statistics of one averaging window:
 fluid_stats2d0.f00000 (fluid_stats, "avg_direction": "z") and
 wall_stats2d0.f00000 (user_stats of tau, duprat_dpds and duprat_alpha). The
-last file of each series is used. For each run the script reports, on the
-hill wall:
+last file of each series that holds data is used. For each run the script
+reports, on the hill wall:
 
 - element boundaries: the largest difference between the two copies of a
   wall node shared by two neighbouring elements, for <dp/ds> and <alpha>;
@@ -100,10 +100,17 @@ def read_fld(path):
 
 
 def last_file(d, prefix):
+    """The last file of a series that holds data, and the first file, which
+    holds the coordinates. A run may end with an empty output."""
     fs = sorted(glob.glob(os.path.join(d, prefix + '*.f[0-9]*')))
     if not fs:
         raise SystemExit(f'no {prefix}*.f* in {d}')
-    return fs[-1], fs[0]
+    for f in reversed(fs):
+        r = read_fld(f)
+        if any(np.any(v != 0) for k, v in r.items()
+               if k in ('U', 'P', 'S')):
+            return f, fs[0]
+    raise SystemExit(f'all {prefix}*.f* in {d} are empty')
 
 
 def check(d, sampling):
