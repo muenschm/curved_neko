@@ -7,3 +7,8 @@
 *.zip
 log_*
 build*/
+# LaTeX build files
+*.aux
+*.log
+*.out
+*.toc

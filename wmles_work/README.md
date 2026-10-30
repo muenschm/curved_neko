@@ -20,10 +20,26 @@ branch `claude/stoic-euler-8zyrhx` after every turn. A Claude Code Stop hook in
   - `upstream_pr_reichardt_comment.md`: comment on that pull request after the
     develop merge and the removal of the GPU warning
   - `upstream_pr_duprat.md`: [ExtremeFLOW/neko#2888](https://github.com/ExtremeFLOW/neko/pull/2888)
+- `report/`: the WMLES report, `wmles_report.tex` with `figures/`, and the
+  PDF built from it (`pdflatex` twice). It includes the periodic-hill results
+  for Reichardt and Duprat and the removal of the GPU warnings.
+- `periodic_hill/`: the periodic-hill case and its evaluation.
+  - `forces_from_log.py`: extracts the `force_torque` and flow-rate output
+    from Neko logs into CSV.
+  - `analysis/gpu_cpu_windows.py`: compares two runs window by window. It
+    imports `ph_stats.py`.
 - `tools/autosave.sh`: the autosave script.
 
-The periodic-hill case, the evaluation scripts and the report are added here
-once they are restored.
+### Lost and still to be restored
+
+The container reset on 30 Oct 2026 deleted these files before they were
+saved here:
+- the case files (`periodic_hill.case`, the Duprat case, `periodic_hill.f90`,
+  `CHANGES.md`, `gpu_cpu_check/`);
+- the evaluation scripts `analysis/ph_stats.py` and `analysis/ph_forces.py`,
+  with the results folders.
+
+They are rewritten here when they are next needed.
 
 ## Restoring the hook in a new session
 
