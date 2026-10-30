@@ -14,35 +14,48 @@
 Branch `feature/duprat-local-dpds` in muenschm/neko, based on
 `feature/duprat-wall-model`. It becomes a follow-up PR once #2888 is merged.
 
-Done (commit 50b9589, not yet built or tested):
-- (A) The pressure gradient is averaged across element boundaries
-  (gather-scatter and `coef%mult`) before sampling.
-- (B) The sampled gradient vector is filtered in time first. The filtered
-  vector is then projected on the current flow direction and limited
-  (update kernel with eps = 1). The device kernels are unchanged.
-- User guide updated.
+Commits:
+- 50b9589: (A) the pressure gradient is averaged across element boundaries
+  (gather-scatter and `coef%mult`) before sampling; (B) the sampled gradient
+  vector is filtered in time, then projected on the current flow direction.
+- bcb0e5a: closer to the paper (agreed with the user on 30 Oct 2026):
+  - reversed wall shear stress, sign(tau_w) in Eq. (5): where the sampled
+    velocity is below the separation profile u_p U*(h u_p / nu, alpha = 0)
+    under an adverse gradient, the stress points along the sampled velocity
+    (before: zero stress);
+  - the Stokes bound is optional, `pressure_gradient.stokes_limit`, default
+    false (it is not in the paper; it came from the student's code);
+  - the update kernels no longer filter (`eps` replaced by the flag);
+  - all backends, unit tests with SciPy references, user guide, schema.
 
-Test on a coarse hill (22x8x8 elements, N = 5, statistics t = 20...40,
-`analysis/wall_dpds_check.py`), old (`feature/duprat-wall-model`) against
-new (50b9589):
-- (A) works. The median spike of <alpha> at element boundaries drops from
-  8.4e-3 to 1.0e-3 (ratio to interior nodes 1.7 -> 0.6); for <dp/ds> the
-  ratio goes from 1.6 to 1.0.
-- (B) changes little. The Stokes bound dp_max = rho/nu (u nu/h)^1.5 limits
-  dp/ds along almost the whole wall:
-  - bubble and recovery (x/h 1...7): bound 1e-4...1e-2 against |d<p>/ds|
-    0.01...0.09;
-  - crest and windward face: model dp/ds is about equal to the bound.
-  The bound, not the projection, is the main reason the model sees too
-  little pressure gradient. Earlier statements ("about a tenth because of
-  the projection") are to be corrected in the report and the #2888 text.
-- Running: a variant without the Stokes bound (scratch build only).
+Tests of bcb0e5a (see `duprat_tests/README.md`):
+- dp and sp builds with the CI flags; Duprat unit test 8/8 in dp and sp;
+  full dp suite 59/59 (needs `LD_LIBRARY_PATH` with json-fortran).
+- findent clean, flint 10.00 for all changed Fortran files.
+- CUDA, HIP and Metal kernels emulated on the host, OpenCL on PoCL, all
+  against the CPU kernel on 3000 random nodes: dp within 3e-8 (solver
+  tolerance), sp within 2e-4, identical branch selection.
+- Each branch has a single root in the scanned hill-like cases, and the
+  stress passes zero continuously at the separation velocity
+  (`duprat_tests/branch_scan.py`).
+
+Coarse hill (22x8x8 elements, N = 5, statistics t = 20...40,
+`analysis/wall_summary.py`, `analysis/wall_dpds_check.py`):
+
+| run | sep | reatt | mean abs(tau_w), hill | alpha spike ratio |
+|---|---|---|---|---|
+| old (`feature/duprat-wall-model`) | 1.07 | 2.88 | 0.00166 | 1.7 |
+| new, 50b9589 (A+B, Stokes bound) | 1.06 | 3.72 | 0.00194 | 0.6 |
+| A+B without Stokes bound | 0.88 | 4.48 | 0.00330 | 1.1 |
+| bcb0e5a (paper: no bound, reversed stress) | running | | | |
+
+The Stokes bound, not the projection, was the main reason the model saw too
+little pressure gradient. Earlier statements ("about a tenth because of the
+projection") are to be corrected in the report and the #2888 text.
 
 Open:
-- Build environment after the container reset: the json-fortran and pFUnit
-  source builds need the user's approval.
-- Build at the CI flags in sp and dp, unit tests, a smoke run, and a short
-  hill test of dp/ds against the mean pressure gradient.
+- Production hill run of bcb0e5a by the user (`periodic_hill_duprat.case`
+  needs no change; `stokes_limit` defaults to false).
 - (C) Driving body force: `flow_rate_force` keeps its scale only as a local
   variable in `fluid_volflow`. Options are a core change or a constant
   `body_force` in the wall-model JSON. To be decided with the user.
