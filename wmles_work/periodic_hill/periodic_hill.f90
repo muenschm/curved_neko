@@ -208,6 +208,15 @@ contains
        w%x(i,1,1,1) = ran*amp
     end do
 
+    ! Neko does not copy the initial condition to the device (since #2831),
+    ! so the velocity set on the host is copied here. field_rzero acts on the
+    ! device directly.
+    if (NEKO_BCKND_DEVICE .eq. 1) then
+       call u%copy_from(HOST_TO_DEVICE, sync=.false.)
+       call v%copy_from(HOST_TO_DEVICE, sync=.false.)
+       call w%copy_from(HOST_TO_DEVICE, sync=.true.)
+    end if
+
     call field_rzero(p)
   end subroutine initial_conditions
 
