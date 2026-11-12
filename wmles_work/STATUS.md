@@ -75,4 +75,13 @@ Open:
 - (C) Driving body force: `flow_rate_force` keeps its scale only as a local
   variable in `fluid_volflow`. Options are a core change or a constant
   `body_force` in the wall-model JSON. To be decided with the user.
-- Rewrite `ph_stats.py` and `ph_forces.py` for the next evaluation.
+- Production runs of bcb0e5a started on 12 Nov 2026: Fritz (CPU) and Alex
+  (GPU, CUDA; first real GPU run of the new Duprat kernels). Compare them
+  with `analysis/gpu_cpu_windows.py`.
+- `periodic_hill.f90` now copies the initial velocity to the device itself
+  (needed since Neko #2831; on Alex the job failed with "Initial condition
+  did not set u" before).
+- `analysis/ph_stats.py` rewritten and checked against pySEMTools; the
+  reader bug for files with several scalars is fixed (see
+  `analysis/README.md`). `ph_forces.py` is still to be rewritten
+  (`forces_from_log.py` covers the extraction).

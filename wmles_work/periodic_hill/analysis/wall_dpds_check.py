@@ -89,9 +89,12 @@ def read_fld(path):
             off += a.nbytes
             i += 1
         elif c == 'S':
+            # each scalar is a separate block over all elements; out['S'] is
+            # indexed [element, scalar, j, i]
             ns = int(rdcode[i + 1:i + 3])
             a = np.frombuffer(b, dtype=dt, count=nel*ns*npt, offset=off)
-            out['S'] = a.reshape(nel, ns, ly, lx).astype(float)
+            out['S'] = a.reshape(ns, nel, ly, lx).transpose(1, 0, 2, 3) \
+                .astype(float)
             off += a.nbytes
             i += 3
         else:

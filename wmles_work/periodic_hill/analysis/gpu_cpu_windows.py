@@ -16,17 +16,20 @@ standard error. The windows of one run are treated as independent samples.
 """
 import argparse
 import os
+import sys
 
 import numpy as np
 
-from ph_stats import (LY, Lagrange, combine, gll, hill_height, interp,
-                      locate, reynolds, stats_files)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from ph_stats import (LY, Lagrange, combine, gll, hill_height,  # noqa: E402
+                      interp, locate, reynolds, stats_files)
 
 XS = [0.5, 1.0, 2.0, 3.0, 4.0, 6.0]
-QUANTITIES = [('max u\'u\'', 'upup', np.max, 1.0),
-              ('max -u\'v\'', 'upvp', np.max, -1.0),
-              ('max v\'v\'', 'vpvp', np.max, 1.0),
-              ('min <u>', 'u', np.min, 1.0)]
+# nanmax/nanmin: points just outside the discrete wall interpolate to NaN
+QUANTITIES = [('max u\'u\'', 'upup', np.nanmax, 1.0),
+              ('max -u\'v\'', 'upvp', np.nanmax, -1.0),
+              ('max v\'v\'', 'vpvp', np.nanmax, 1.0),
+              ('min <u>', 'u', np.nanmin, 1.0)]
 
 
 def window_values(d, start, from_time, min_window):
@@ -67,6 +70,11 @@ def main():
         vals, used = window_values(d, st, args.from_time, args.min_window)
         res.append((name, vals, used))
     (na, va, ua), (nb, vb, ub) = res
+    for name, vals, _ in res:
+        if len(vals) < 2:
+            raise SystemExit(f'{name}: {len(vals)} window(s) of at least '
+                             f'{args.min_window:g} time units; the standard '
+                             'error needs at least 2 (see --min-window)')
     lines = []
     for name, vals, used in res:
         lines.append(f'{name}: {len(used)} windows, ' + ', '.join(

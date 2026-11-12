@@ -40,8 +40,11 @@ branch `claude/stoic-euler-8zyrhx` after every turn. A Claude Code Stop hook in
     `"a_restart_file"`.
   - `forces_from_log.py`: extracts the `force_torque` and flow-rate output
     from Neko logs into CSV.
-  - `analysis/gpu_cpu_windows.py`: compares two runs window by window. It
-    imports `ph_stats.py`.
+  - `analysis/`: post-processing of the statistics (`ph_stats.py`,
+    `gpu_cpu_windows.py`, `wall_summary.py`, `wall_dpds_check.py`); see
+    `analysis/README.md`.
+- `duprat_tests/`: SciPy references and GPU-kernel emulations for the Duprat
+  kernels; see `duprat_tests/README.md`.
 - `tools/autosave.sh`: the autosave script.
 
 ### Lost and still to be restored
@@ -50,8 +53,8 @@ The container reset on 30 Oct 2026 deleted these files before they were
 saved here:
 - `periodic_hill/CHANGES.md` and the deterministic GPU/CPU test
   `periodic_hill/gpu_cpu_check/`;
-- the evaluation scripts `analysis/ph_stats.py` and `analysis/ph_forces.py`,
-  with the results folders.
+- the evaluation script `analysis/ph_forces.py` and the results folders
+  (`analysis/ph_stats.py` was rewritten on 12 Nov 2026).
 
 They are rewritten here when they are next needed.
 
