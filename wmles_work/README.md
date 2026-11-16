@@ -19,7 +19,10 @@ branch `claude/stoic-euler-8zyrhx` after every turn. A Claude Code Stop hook in
   - `upstream_pr_reichardt.md`: [ExtremeFLOW/neko#2884](https://github.com/ExtremeFLOW/neko/pull/2884)
   - `upstream_pr_reichardt_comment.md`: comment on that pull request after the
     develop merge and the removal of the GPU warning
-  - `upstream_pr_duprat.md`: [ExtremeFLOW/neko#2888](https://github.com/ExtremeFLOW/neko/pull/2888)
+  - `upstream_pr_duprat.md`: [ExtremeFLOW/neko#2888](https://github.com/ExtremeFLOW/neko/pull/2888),
+    revised on 16 Nov 2026 for the reworked local mode
+  - `upstream_pr_duprat_comment_update.md`: comment on #2888 about the
+    rework
 - `report/`: the WMLES report, `wmles_report.tex` with `figures/`, and the
   PDF built from it (`pdflatex` twice). It includes the periodic-hill results
   for Reichardt and Duprat and the removal of the GPU warnings.

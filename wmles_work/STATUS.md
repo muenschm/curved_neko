@@ -5,14 +5,20 @@
 - Reichardt: [ExtremeFLOW/neko#2884](https://github.com/ExtremeFLOW/neko/pull/2884),
   branch `feature/reichardt-wall-model` (head 7e9dc34).
 - Duprat: [ExtremeFLOW/neko#2888](https://github.com/ExtremeFLOW/neko/pull/2888),
-  branch `feature/duprat-wall-model` (head 479331c).
+  branch `feature/duprat-wall-model` (head f854f9b since 16 Nov 2026: the
+  reworked local mode was fast-forwarded into the PR on the user's decision,
+  instead of a follow-up PR). Checked before the push on the branch merged
+  with the current develop (74c61b0): no conflicts, unit suite 60/60 in dp
+  and sp, coarse hill smoke run stable. New PR description and a comment
+  for the colleagues in `pr_texts/` (to be posted by the user).
 - Whichever is merged second needs a merge of `develop`, and
   `WALLM_KNOWN_TYPES` then has 7 entries.
 
 ## In progress: Duprat local-mode improvements
 
 Branch `feature/duprat-local-dpds` in muenschm/neko, based on
-`feature/duprat-wall-model`. It becomes a follow-up PR once #2888 is merged.
+`feature/duprat-wall-model`. Since 16 Nov 2026 part of #2888 (the PR branch
+was fast-forwarded to f854f9b); no separate follow-up PR.
 
 Commits:
 - 50b9589: (A) the pressure gradient is averaged across element boundaries
@@ -104,6 +110,6 @@ Open:
   of the weak dp/ds (Stokes limit), summary and open items updated. The old
   Duprat runs were re-evaluated with the new scripts
   (`periodic_hill/results_Re10595_duprat/`); they reproduce the report.
-  Still to correct: the PR #2888 text (cause of the weak dp/ds).
+  The PR #2888 text is rewritten (`pr_texts/upstream_pr_duprat.md`).
 - Possible model output: a signed alpha (s_tau alpha) would show how often
   the reversed branch is active instantaneously.
