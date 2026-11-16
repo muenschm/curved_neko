@@ -36,6 +36,14 @@ python3 -I $A/ph_stats.py        alex  150 --x 0.5,1,2,3,4,6 --out profiles_alex
 python3 -I $A/gpu_cpu_windows.py --run Fritz fritz 150,489.5319246170351 --run Alex alex 150
 python3 ../forces_from_log.py log_1Node_1st_run log_1Node_2nd_run   # in forces_fritz/
 python3 -I $A/ph_forces.py       forces_fritz
+# figures of the report (Gloerfelt & Cinnella database in GLOERFELT_DIR)
+python3 -I $A/ph_plots.py --ref GLOERFELT_DIR \
+    --run "Duprat new, Fritz-CPU" fritz 150,489.5319246170351 \
+    --run "Duprat new, Alex-GPU" alex 150 \
+    --run "Duprat old, Fritz-CPU" old_fritz 150,483.3943 \
+    --run "Duprat old, Alex-GPU" old_alex 150 \
+    --outdir ../../report/figures --tag Duprat_v2_vs_v1 \
+    --title "Duprat: new version (bcb0e5a) vs previous version"
 ```
 
 ## Comparison with the previous Duprat version and the reference
@@ -80,7 +88,10 @@ Notes:
 - In the mean flow, the model never gives tau_w against <u_t>, so the zero
   crossings of <u_t> and of the reconstructed C_f agree.
 - Fritz against Alex: 17 of 18 turbulence peaks higher on the CPU, +2 to
-  +10 %, all below 2 sigma; the same tendency as Reichardt (16 of 18).
+  +10 %, all below 2 sigma. The old Duprat runs had 14 of 18 higher on the
+  CPU, the Reichardt runs 16 of 18 higher on the GPU: the sign changes with
+  the model, so this is run-to-run scatter rather than a code-path effect
+  (as concluded in the report).
 - New against old on the same machine (`new_vs_old_*.txt`):
   - all 18 turbulence peaks lower on both machines, by 1 to 17 % (Fritz)
     and 7 to 17 % (Alex), mostly 2 to 7 sigma, i.e. towards the reference;

@@ -129,9 +129,24 @@ clarify.
         short of the reference. Drag and skin friction are 33--43\,\%
         higher than with Reichardt.
       \item \emph{Cause:} in the bubble and in the recovery region the local
-        mode passes on only about a tenth of the mean pressure gradient.
-        Three improvements of the local mode are proposed.
+        mode passes on only about a tenth of the mean pressure gradient,
+        mainly because of the Stokes limit of the original code.
       \item \emph{GPU versus CPU:} no systematic difference.
+    \end{itemize}
+  \item \textbf{Duprat closer to the paper} (Section~\ref{sec:dupv2},
+    branch \code{feature/duprat-local-dpds}): gradient averaged across
+    element faces, vector filter, Stokes limit optional (off by default),
+    reversed wall shear stress ($\mathrm{sign}(\tau_w)$ in Eq.~(5)).
+    \begin{itemize}
+      \item \emph{Verification:} unit tests with new references, all
+        device kernels checked against the CPU kernel, first GPU production
+        run of the new kernels.
+      \item \emph{Hill:} the model sees 74--100\,\% of the mean gradient
+        except in the recovery region (25\,\%). The turbulence peaks drop by
+        10--15\,\% onto the reference, the bubble friction reaches the
+        reference, the reattachment moves 0.25 downstream (3.4--3.6).
+      \item \emph{Remaining:} late separation (0.44), reattachment 0.7
+        short, windward friction peak 10--15\,\% high.
     \end{itemize}
   \item \textbf{Upstream:} both models are prepared as separate pull
     requests against ExtremeFLOW/neko \code{develop}, each with a pFUnit
@@ -347,7 +362,9 @@ $\up = |(\mu/\rho^2)\,\partial P/\partial x|^{1/3}$, which is identical,
 since Neko's \code{p} is the dynamic pressure: the pressure equation uses
 $h_1 = 1/\rho$. The friction velocity follows from
 $f(\utau) = \utp\,U^*(h\utp/\nu) - U = 0$. For $\dpds = 0$, $\alpha = 1$
-and the model reduces to its equilibrium form.
+and the model reduces to its equilibrium form. The paper's Eq.~(5) has
+$\mathrm{sign}(\tau_w)\,\alpha$ in place of $\alpha$; the reversed
+branch is added in Section~\ref{sec:dupv2}.
 
 \subsection{Review of the original implementation}
 \label{sec:duprat-review}
@@ -1429,9 +1446,11 @@ windward face, 8.3--8.8 & $-0.578\ldots-0.143$ & $-0.858\ldots-0.200$ \\
     recovery region 1/8 to 1/9. CPU and GPU agree.
   \item \textbf{Cause:} the gradient is projected on the
     \emph{instantaneous} wall-parallel velocity and limited to the Stokes
-    bound before it is filtered (Section~\ref{sec:local}). Where the flow
-    direction changes often, as in the bubble and near reattachment, the
-    projections cancel in the time filter, and the limit cuts the peaks.
+    bound before it is filtered (Section~\ref{sec:local}). We first
+    attributed the weak gradient to the projections cancelling in the time
+    filter. A later test (Section~\ref{sec:dupv2}) showed that the Stokes
+    limit is the main cause: it caps $\dpds$ wherever the sampled velocity
+    is small.
   \item \textbf{Element boundaries:} $\alpha$ shows narrow spikes there, and
     $|\dpds|$ dips to about half of its neighbours. They appear identically
     on CPU and GPU, so they are not a device effect. The most likely cause is
@@ -1513,6 +1532,7 @@ to confirm that the code paths agree.
 \end{itemize}
 
 \subsection{Discussion}
+\label{sec:hilldup-disc}
 
 The Duprat model improves the hill flow where the pressure gradient is
 strong and acts as the model intends:
@@ -1543,6 +1563,315 @@ the local mode follow; all keep the interface:
 These changes can be tested on this case with the same evaluation.
 Independently of the model, the coarse wall-normal resolution near the crest
 (Section~\ref{sec:hill}) remains a factor.
+
+%=====================================================================
+\section{Duprat model closer to the paper}
+\label{sec:dupv2}
+%=====================================================================
+
+The follow-up branch \code{feature/duprat-local-dpds} (on top of the Duprat
+pull request, ExtremeFLOW/neko\#2888) changes the \code{local} mode in two
+commits. 50b9589 implements the first two improvements proposed in
+Section~\ref{sec:hilldup-disc}; bcb0e5a brings the model closer to the
+paper. The driving body force (the third proposal) is not included: the
+scale of \code{flow\_rate\_force} is a local variable of the flow-rate
+routine and not accessible to the wall model.
+
+\subsection{Changes}
+
+\begin{enumerate}
+  \item \textbf{Gradient averaged across element faces.} $\nabla p$ is
+    computed element by element, summed with the gather-scatter operator and
+    multiplied by the inverse multiplicity before it is sampled. The
+    face-normal derivative is two-valued in the $C^0$ basis; without the
+    average, wall nodes on element edges saw the one-sided gradient of one
+    element.
+  \item \textbf{Vector filter.} The sampled gradient \emph{vector} is
+    filtered with the moving average of Eq.~\eqref{eq:ema} and then projected
+    on the current wall-parallel flow direction. Before, the projections on
+    the instantaneous direction were filtered.
+  \item \textbf{Stokes limit optional.} The limit
+    $|\dpds| \le (\rho/\nu)(u\nu/h)^{3/2}$ is not part of the paper; it comes
+    from the original code. It is now the option
+    \code{pressure\_gradient.stokes\_limit}, default \code{false}. A coarse
+    test (below) showed that this limit, not the projection, capped $\dpds$
+    along most of the wall. Section~\ref{sec:hilldup-dpds} attributed the
+    weak gradient to the cancellation of the projections; that was wrong.
+  \item \textbf{Reversed wall shear stress.} Eq.~(5) of the paper has
+    $\mathrm{sign}(\tau_w)\,\alpha$ where Eq.~\eqref{eq:duprat-ode} has
+    $\alpha$; the first port assumed $\tau_w > 0$. Under an adverse gradient
+    the separation profile ($\alpha = 0$) gives the velocity
+    $u_\mathrm{sep} = \up\,U^*(h\up/\nu)$ at the sampling point. If the
+    sampled velocity is smaller, the near-wall flow is reversed: the kernel
+    solves the branch with $s_\tau = -1$,
+    \begin{equation}
+      \frac{\mathrm{d}U^*}{\mathrm{d}y^*} =
+        \frac{s_p\,(1-\alpha)^{3/2}\,y^* + s_\tau\,\alpha}{1 + \nu_t/\nu},
+      \label{eq:duprat-ode-sign}
+    \end{equation}
+    and the stress points along the sampled velocity. Before, the stress
+    was set to zero there. The stress passes zero continuously at
+    $u = u_\mathrm{sep}$. Together with the projection, the stress is also
+    continuous when the flow at the sampling point reverses: for a fixed
+    gradient, both directions give a stress of the same sign.
+\end{enumerate}
+All five backends (CPU, CUDA, HIP, OpenCL, Metal) are changed; the update
+kernels no longer filter, their weight argument is replaced by the flag of
+the limit. User guide and JSON schema are updated.
+
+\subsection{Verification}
+
+\begin{itemize}
+  \item \textbf{Unit tests:} the Duprat suite (8 tests) has new SciPy
+    references for $U^*$ with $s_\tau = -1$, for a strongly reversed case,
+    for two cases just below and above $u_\mathrm{sep}$, and for the
+    projection with and without the limit. It passes in single and double
+    precision with the CI flags, and so does the full unit suite (59
+    tests). \code{findent} is clean; the flint score is unchanged (10.00).
+  \item \textbf{Device kernels:} the CUDA, HIP and Metal kernels were
+    compiled on the host with \code{g++}, the OpenCL kernels ran on PoCL.
+    On 3000 random wall nodes (favourable, adverse and reversed) they agree
+    with the CPU kernel to $3\cdot10^{-8}$ in double precision (the solver
+    tolerance) and to $2\cdot10^{-4}$ in single precision; the branch is the
+    same at all 547 reversed nodes.
+  \item \textbf{Roots:} for hill-like parameters each branch has a single
+    root, and the stress along the flow is monotone in $u$ and passes zero
+    at $u_\mathrm{sep}$.
+  \item \textbf{Coarse hill} ($22\times8\times8$ elements, $N = 5$,
+    statistics $t = 20\ldots40$), Table~\ref{tab:dupv2coarse}. Without the
+    limit the model sees most of the mean gradient; the reversed stress
+    lengthens the bubble further.
+\end{itemize}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Coarse hill test. Ratio: mean $|\dpds|$ of the model over the mean
+$|\partial\langle p\rangle/\partial s|$, per wall region.}
+\label{tab:dupv2coarse}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+ & sep. & reatt. & crest & bubble & recovery & windward \\
+\midrule
+previous version & 1.07 & 2.88 & 0.45 & 0.21 & 0.06 & 0.33 \\
+face average + vector filter (50b9589) & 1.06 & 3.72 & 0.52 & 0.21 & 0.07 & 0.35 \\
+\quad without the Stokes limit & 0.88 & 4.48 & 0.94 & 0.56 & 0.35 & 1.04 \\
+bcb0e5a (also reversed stress) & 0.79 & 5.06 & 0.88 & 0.56 & 0.63 & 1.06 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Production runs}
+
+The case of Section~\ref{sec:hilldup} was run unchanged with bcb0e5a
+(\code{stokes\_limit} not set, i.e.\ off), to $t = 600$, statistics from
+$t = 150$ in windows of 50:
+\begin{itemize}
+  \item Fritz (CPU, 72 ranks), two jobs, restart at $t = 489.53$;
+  \item Alex (one NVIDIA GPU, CUDA), one job. This is the first run of the
+    new device kernels on hardware.
+\end{itemize}
+Both ran without NaN and without unconverged solves. The user file now
+copies the initial velocity to the device itself, since Neko no longer does
+(ExtremeFLOW/neko\#2831). The evaluation and all tables of this section are
+in \code{periodic\_hill/results\_Re10595\_duprat\_v2}.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Previous and new Duprat version, Fritz / Alex. Separation and
+reattachment: zero crossings of the mean wall-parallel velocity at the
+sampling point; in parentheses the reattachment per window (windows of at
+least 40) with its standard error. $C_f$: Duprat model on the mean flow.
+Forces scaled as in Table~\ref{tab:hilldupforces}, $t \ge 150$.}
+\label{tab:dupv2}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+ & previous & new (bcb0e5a) & reference \\
+\midrule
+separation & 0.45 / 0.45 & 0.44 / 0.44 & $-0.12$ \\
+reattachment & 3.33 / 3.21 & 3.46 / 3.64 & 4.31 (exp.\ 4.21) \\
+ & ($3.40 \pm 0.11$ / $3.21 \pm 0.08$) & ($3.43 \pm 0.11$ / $3.64 \pm 0.04$) & \\
+$C_{f,\min}$ (bubble) & $-0.0015$ / $-0.0013$ & $-0.0045$ / $-0.0045$ & $-0.0044$ \\
+$C_{f,\max}$ (windward) & 0.031 / 0.031 & 0.038 / 0.036 & 0.033 \\
+hill wall, $F_{x,p}$ & 0.0622 / 0.0595 & $0.0568 \pm 0.0010$ / $0.0559 \pm 0.0008$ & \\
+hill wall, $F_{x,v}$ & 0.00285 / 0.00286 & $0.00253 \pm 0.00012$ / $0.00234 \pm 0.00005$ & \\
+top wall, $F_{x,v}$ & 0.00854 / 0.00859 & $0.00860 \pm 0.00008$ / $0.00874 \pm 0.00008$ & \\
+forcing $\langle f\rangle$ & 0.01291 / 0.01243 & 0.01190 / 0.01174 & \\
+balance & 1.010 / 1.010 & 1.011 / 1.011 & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Ratio of the mean $|\dpds|$ used by the model to the mean
+$|\partial\langle p\rangle/\partial s|$, production runs, Fritz / Alex.}
+\label{tab:dupv2dpds}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+region ($x/h$) & previous & new (bcb0e5a) \\
+\midrule
+crest, 0--0.4 & 0.54 / 0.59 & 0.85 / 0.85 \\
+bubble, 0.5--3 & 0.08 / 0.07 & 0.74 / 0.81 \\
+recovery, 4--7 & 0.11 / 0.12 & 0.24 / 0.25 \\
+windward face, 8.3--8.8 & 0.68 / 0.68 & 1.00 / 1.01 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{Minimum of $\langle u\rangle$ and maxima of the Reynolds stresses,
+previous and new version (Fritz / Alex), full averaging range. Reference:
+Gloerfelt \& Cinnella, $512\times256\times256$.}
+\label{tab:dupv2prof}
+\begin{tabular}{@{}cccccccccc@{}}
+\toprule
+$x/h$ & \multicolumn{3}{c}{$\langle u\rangle_{\min}$} &
+\multicolumn{3}{c}{$\langle u'u'\rangle_{\max}$} &
+\multicolumn{3}{c}{$-\langle u'v'\rangle_{\max}$} \\
+ & prev. & new & ref. & prev. & new & ref. & prev. & new & ref. \\
+\midrule
+0.5 & $-0.112$/$-0.111$ & $-0.109$/$-0.111$ & $-0.080$ & 0.129/0.127 & 0.117/0.113 & 0.112 & 0.046/0.047 & 0.044/0.042 & 0.042 \\
+1 & $-0.149$/$-0.137$ & $-0.124$/$-0.126$ & $-0.135$ & 0.110/0.108 & 0.100/0.097 & 0.093 & 0.051/0.052 & 0.049/0.046 & 0.042 \\
+2 & $-0.237$/$-0.197$ & $-0.209$/$-0.211$ & $-0.253$ & 0.104/0.103 & 0.089/0.086 & 0.087 & 0.046/0.044 & 0.040/0.037 & 0.036 \\
+3 & $-0.115$/$-0.084$ & $-0.095$/$-0.119$ & $-0.140$ & 0.100/0.099 & 0.091/0.085 & 0.091 & 0.041/0.039 & 0.034/0.033 & 0.035 \\
+4 & slip & $+0.005$/$-0.013$ & $-0.005$ & 0.086/0.087 & 0.079/0.078 & 0.079 & 0.034/0.033 & 0.028/0.029 & 0.030 \\
+6 & slip & slip & 0.000 & 0.064/0.064 & 0.062/0.059 & 0.055 & 0.023/0.022 & 0.021/0.020 & 0.020 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/cf_bottom_Duprat_v2_vs_v1.png}
+\caption{$C_f$ along the hill wall, previous and new Duprat version. Solid
+and dashed: the Duprat model applied to the mean flow; dotted:
+$\mathrm{sign}(\langle u_t\rangle)\,\langle|\tau_w|\rangle$. At the
+reattachment point the reconstruction jumps: $\langle\dpds\rangle$ is taken
+relative to the instantaneous flow direction, which alternates there.}
+\label{fig:dupv2cf}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/profiles_u_Duprat_v2_vs_v1.png}\\[1ex]
+\includegraphics[width=\textwidth]{figures/profiles_upup_Duprat_v2_vs_v1.png}\\[1ex]
+\includegraphics[width=\textwidth]{figures/profiles_upvp_Duprat_v2_vs_v1.png}
+\caption{Profiles of $\langle u\rangle$, $\langle u'u'\rangle$ and
+$-\langle u'v'\rangle$, previous and new Duprat version, against Gloerfelt
+\& Cinnella.}
+\label{fig:dupv2prof}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/wall_alpha_dpds_Duprat_v2_vs_v1.png}
+\caption{Mean $\alpha$ (top) and mean $\dpds$ used by the model (bottom)
+along the hill wall, previous and new Duprat version.}
+\label{fig:dupv2wall}
+\end{figure}
+
+\subsection{Results}
+
+\begin{itemize}
+  \item \textbf{Pressure gradient} (Table~\ref{tab:dupv2dpds},
+    Figure~\ref{fig:dupv2wall}): the model now sees the full mean gradient
+    on the windward face, 85\,\% at the crest and three quarters in the
+    bubble, against 1/13 before. Only in the recovery region, where the
+    flow direction alternates, it still sees a quarter. The spikes of
+    $\alpha$ at the element boundaries are gone; $\alpha$ is lower
+    (0.70--0.80 against 0.78--0.87), i.e.\ the pressure term weighs more.
+  \item \textbf{Turbulence} (Figure~\ref{fig:dupv2prof}): compared window by
+    window on the same machine, all 18 peak values of $\langle u'u'\rangle$,
+    $\langle v'v'\rangle$ and $-\langle u'v'\rangle$ at
+    $x/h = 0.5\ldots6$ are lower than with the previous version, by
+    1--17\,\% (Fritz) and 7--17\,\% (Alex), mostly at 2--7$\sigma$. The
+    previous version overshot the reference by 10--20\,\%; at
+    $x/h = 2\ldots4$ the new peaks are on the reference.
+  \item \textbf{Bubble friction:} $C_f$ in the bubble now follows the fine
+    reference grids ($-0.003\ldots-0.0045$, Figure~\ref{fig:dupv2cf}),
+    against $-0.001$ before. This is the reversed stress: where the mean
+    velocity at the sampling point is small, the adverse gradient drives a
+    reversed near-wall flow.
+  \item \textbf{Reattachment:} 0.25 further downstream on average, but the
+    change is clear only on Alex ($+0.43$); on Fritz it is within the
+    scatter ($+0.06$). It is still 0.7 short of the reference. The
+    separation point is unchanged at 0.44.
+  \item \textbf{Recovery:} the near-wall velocity at $x/h = 4$ and 6 is
+    lower: slight backflow at $x/h = 4$ (reference $-0.005$), and at
+    $x/h = 6$ a slip velocity of 0.084 against 0.12--0.13 before.
+  \item \textbf{Windward peak:} $C_{f,\max}$ rises from 0.031 to
+    0.036--0.038, now 10--15\,\% above the reference (0.033); the model sees
+    the full favourable gradient there.
+  \item \textbf{Forces:} pressure drag and forcing are 5--8\,\% lower, the
+    hill friction 11--18\,\% lower (negative friction in the bubble); the top
+    wall is unchanged. The momentum balance closes to 1.1\,\%.
+  \item \textbf{Backflow in the bubble core} ($x/h = 1\ldots3$): weaker on
+    Fritz, stronger on Alex. The two previous runs already differed by
+    0.03--0.04 there, so this is within the run-to-run scatter.
+\end{itemize}
+
+\noindent\textbf{GPU versus CPU:} the mean flow, the separation point and
+the friction agree; the reattachment points differ by $1.8\sigma$ (3.43
+against 3.64). 17 of the 18 turbulence peaks are higher on the CPU, by
+2--10\,\%, all below $2\sigma$. With the previous version it was 14 of 18 on
+the CPU, with Reichardt 16 of 18 on the GPU. The sign changes with the
+model, which supports the conclusion of Section~\ref{sec:hilldup-gpucpu}:
+the window errors underestimate the run-to-run scatter, and there is no sign
+of a code-path difference.
+
+\noindent\textbf{Mean wall shear stress statistic:} the mean of
+$|\tau_w|$, signed with the mean flow, is now 16\,\% above the
+\code{force\_torque} friction of the hill wall (previous version: 0.4\,\%).
+The reversed branch acts instantaneously: $\tau_w$ points backwards at times
+while the mean flow at the sampling point goes forwards. The friction is
+therefore taken from \code{force\_torque}.
+
+\subsection{Evaluation scripts}
+
+The evaluation scripts were lost with a container and rewritten
+(\code{periodic\_hill/analysis}, numpy only, with a README). They
+reproduce the numbers of Section~\ref{sec:hilldup} for both previous runs:
+separation, reattachment, $C_f$ extrema, the profile table, the $\dpds$
+ratios, and the mean $C_f$ from $\langle|\tau_w|\rangle$ (0.00284). The file
+reader and the interpolation were checked against pySEMTools
+\cite{pysemtools}: identical fields, and profiles equal to round-off. The
+reader of the lost scripts read files with several scalar fields in the
+wrong order; the wall statistics (one scalar) were not affected. A numpy
+version of the model (\code{duprat\_model.py}, with the reversed branch)
+reconstructs $C_f$ from the mean flow; it matches the unit-test references
+to $5\cdot10^{-12}$.
+
+\subsection{Discussion}
+
+Bringing the local mode closer to the paper does what the analysis of
+Section~\ref{sec:hilldup-dpds} expected: the model sees the pressure
+gradient where it matters, and the reversed stress gives the bubble
+friction of the reference. The turbulence in the shear layer and in the
+recovery region moves onto the reference. Stability was not an issue: the
+filtering keeps the gradient smooth without the Stokes limit, which was the
+reason for the limit in the original code.
+
+The remaining deficits are the late separation over the crest (0.44
+against $-0.12$) and the short bubble (reattachment 3.4--3.6 against 4.2--4.3),
+and the windward peak is now somewhat too high. For comparison, Duprat et
+al.\ report 0.45 / 3.92 on their grid~B ($y^+_f = 40$) and 0.38 / 4.65 on
+grid~A ($y^+_f = 5$). Open points:
+\begin{itemize}
+  \item the recovery region, where the model still sees only a quarter of
+    the mean gradient because the flow direction alternates;
+  \item the driving body force, 20--35\,\% of the mean gradient in the
+    recovery region;
+  \item the wall-normal resolution at the crest;
+  \item a signed $\alpha$ ($s_\tau\alpha$) as output, to see how often the
+    reversed branch is active.
+\end{itemize}
 
 %=====================================================================
 \section{Test environment}
@@ -1589,26 +1918,29 @@ Independently of the model, the coarse wall-normal resolution near the crest
         test in \code{periodic\_hill/gpu\_cpu\_check} would still settle the
         Reichardt observation.
     \end{itemize}
-  \item \textbf{Duprat \code{local} mode:} the hill campaign is done
-    (Section~\ref{sec:hilldup}). The model passes on too little of the
-    pressure gradient where the flow reverses. Implement and test, on the
-    same case with the same evaluation:
+  \item \textbf{Duprat \code{local} mode:} the vector filter, the face
+    average, the optional Stokes limit and the reversed wall shear stress
+    are implemented and tested on the hill (Section~\ref{sec:dupv2}).
+    The branch becomes a pull request once ExtremeFLOW/neko\#2888 is
+    merged. Still open:
     \begin{itemize}
-      \item filtering the gradient vector before the projection and the
-        limit;
-      \item averaging $\nabla p$ continuously across element faces;
-      \item including the driving body force.
+      \item the driving body force (needs access to the scale of
+        \code{flow\_rate\_force});
+      \item the recovery region, where the model sees a quarter of the
+        mean gradient;
+      \item a signed $\alpha$ as output;
+      \item the cost: 37\,\% more per step than Reichardt on the CPU with
+        the previous version, not yet measured for the new one.
     \end{itemize}
-    Also look at the cost: 37\,\% more per step than Reichardt on the
-    CPU.
   \item \textbf{Wall-normal resolution of the hill mesh:} 8 elements over the
     height. A finer or more strongly clustered mesh near the crest would
     separate the wall-model effect from the resolution effect.
   \item \textbf{Mean wall shear stress as a statistic:} the Duprat runs
-    average $|\tau_w|$ through \code{user\_stats}. On the hill wall this
-    matches the \code{force\_torque} skin friction to 0.4\,\%. A signed
-    streamwise $\tau_w$ would also resolve the bubble, where the mean of the
-    magnitude overestimates $|C_f|$.
+    average $|\tau_w|$ through \code{user\_stats}. With the previous
+    version this matched the \code{force\_torque} skin friction of the hill
+    wall to 0.4\,\%; with the reversed stress it is 16\,\% too high
+    (Section~\ref{sec:dupv2}). A signed streamwise $\tau_w$ would resolve
+    the bubble and the reversed branch.
   \item \textbf{Thesis results:} confirm with D.~Bole which code version
     (with or without FIX~10) produced the hill results. Re-examine the
     Duprat hill results and the \code{h\_index}~=~7 channel result in light
@@ -1753,6 +2085,10 @@ hills,
 C.~Rapp, M.~Manhart,
 \newblock Flow over periodic hills: an experimental study,
 \newblock \emph{Experiments in Fluids} 51, 247--269 (2011).
+
+\bibitem{pysemtools}
+pySEMTools, post-processing tools for spectral-element data,
+\url{https://github.com/ExtremeFLOW/pySEMTools}.
 
 \bibitem{bole2026}
 D.~Bole,

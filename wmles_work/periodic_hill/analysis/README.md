@@ -1,7 +1,7 @@
 # Periodic-hill post-processing
 
 Scripts for the z-averaged statistics of the periodic-hill runs. They need
-only Python 3 and numpy. Each script explains its inputs in the docstring at
+only Python 3 and numpy (`ph_plots.py` also matplotlib). Each script explains its inputs in the docstring at
 the top; `--help` prints the options.
 
 Run them with `python3 -I script.py ...` (or plain `python3`). The scripts
@@ -31,6 +31,7 @@ also holds the coordinates.
 | `wall_dpds_check.py` | dp/ds used by the Duprat model against the gradient of the mean pressure, per wall region | `wall_dpds_check.py RUN 150` |
 | `gpu_cpu_windows.py` | compares two runs window by window: peaks of u'u', -u'v', v'v' and min <u> at x/h 0.5...6, with standard errors from the scatter of the windows | `gpu_cpu_windows.py --run CPU dirA 150 --run GPU dirB 150` |
 | `ph_forces.py` | time-averaged forces on both walls, forcing and momentum balance, from the CSV files of `../forces_from_log.py` | `ph_forces.py FORCEDIR --from-time 150` |
+| `ph_plots.py` | figures as in the report: profiles of <u>, <v>, u'u', v'v', -u'v' over the hill, C_f along the hill wall with the four reference grids, <alpha> and <dp/ds> along the wall; up to 4 runs | `ph_plots.py --ref GLOERFELT_DIR --run "new, Fritz" dirA 150 --run "old, Fritz" dirB 150,483.3943 --outdir figs --tag v2` |
 
 Modules used by the scripts:
 

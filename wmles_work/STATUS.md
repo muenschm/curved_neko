@@ -93,9 +93,11 @@ Open:
   wall_dpds_check, duprat_model, gpu_cpu_windows) and checked against
   pySEMTools; the reader bug for files with several scalars is fixed (see
   `analysis/README.md`).
-- Report: new section for bcb0e5a; correct the statement on the cause of
-  the weak dp/ds (Stokes bound, not the projection); figures need the
-  Gloerfelt reference data and the old Duprat statistics (lost in the
-  container reset; ask the user).
+- Report updated (16 Nov 2026): new section "Duprat model closer to the
+  paper" with tables and figures (new vs old vs Gloerfelt), corrected cause
+  of the weak dp/ds (Stokes limit), summary and open items updated. The old
+  Duprat runs were re-evaluated with the new scripts
+  (`periodic_hill/results_Re10595_duprat/`); they reproduce the report.
+  Still to correct: the PR #2888 text (cause of the weak dp/ds).
 - Possible model output: a signed alpha (s_tau alpha) would show how often
   the reversed branch is active instantaneously.
