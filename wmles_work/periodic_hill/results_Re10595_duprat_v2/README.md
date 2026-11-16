@@ -17,6 +17,9 @@ Files:
 - `profiles_fritz.csv`, `profiles_alex.csv`: profiles at x/h = 0.5, 1, 2, 3,
   4, 6.
 - `gpu_cpu_windows.txt`: Fritz against Alex, window by window.
+- `new_vs_old_fritz.txt`: this run against the previous version, both on
+  Fritz, window by window (`gpu_cpu_windows.py --run new_Fritz ...
+  --run old_Fritz old_fritz 150,483.3943`).
 
 Commands (run directory with all stats files of a run; force CSVs from
 `../forces_from_log.py` on the logs):
@@ -77,3 +80,13 @@ Notes:
   crossings of <u_t> and of the reconstructed C_f agree.
 - Fritz against Alex: 17 of 18 turbulence peaks higher on the CPU, +2 to
   +10 %, all below 2 sigma; the same tendency as Reichardt (16 of 18).
+- New against old on the same machine (Fritz, `new_vs_old_fritz.txt`): all
+  18 turbulence peaks lower, by 1 to 17 %, mostly 2 to 4 sigma, i.e. towards
+  the reference; the backflow in the bubble core at x/h = 1...3 is weaker
+  (x/h = 2: -0.209 against -0.240, reference -0.253); the near-wall velocity
+  at x/h = 6 is lower (0.084 against 0.121, reference 0.000).
+- Alpha spike ratio at element boundaries: 18 in the old run, 1.6 / 1.8 in
+  the new one (gradient averaged across element boundaries).
+- Mean C_f (x component) of the hill wall: from <|tau_w|> 0.00293 / 0.00271
+  against force_torque 0.00253 / 0.00234 (old run: 0.00284 against
+  0.00285).

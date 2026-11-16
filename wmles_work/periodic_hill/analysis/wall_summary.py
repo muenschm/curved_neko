@@ -24,8 +24,10 @@ and its component u_t along the wall (positive in +x). It reports:
 3. C_f from the statistics of |tau_w|, signed with <u_t>: 2 sign(u_t)
    <|tau_w|>. Note <|tau_w|> is the mean magnitude, which is larger than the
    magnitude of the mean where the stress changes sign in time.
-4. The mean <|tau_w|> over the hill wall (integral over x divided by 9) and
-   the alpha spike ratio at element boundaries (about 1 without spikes).
+4. The mean <|tau_w|> over the hill wall (integral over x divided by 9),
+   the alpha spike ratio at element boundaries (about 1 without spikes),
+   and the mean C_f of 2. and 3. over x, to compare with Fx_v of
+   force_torque.
 5. The main bubble per window (windows of at least --min-window): mean and
    standard error of separation and reattachment.
 
@@ -168,6 +170,11 @@ def main():
         ratio = np.median(dev[edge[1:-1]])/np.median(dev[~edge[1:-1]])
         print(f'  4. mean <|tau_w|> hill {tauw:.5f}, '
               f'alpha spike ratio {ratio:.1f}')
+        # x component of the mean skin friction, comparable with Fx_v of
+        # force_torque (tau_w t_x ds = tau_w dx)
+        print(f'     mean C_f (x component): from <|tau_w|> '
+              f'{np.trapezoid(cf_t, x)/LX:.5f}, model from mean flow '
+              f'{np.trapezoid(cf_m, x)/LX:.5f}')
 
     # 5. per window
     seps, reatts = [], []
