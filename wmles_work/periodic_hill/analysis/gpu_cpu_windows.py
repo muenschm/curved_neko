@@ -21,8 +21,8 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ph_stats import (LY, Lagrange, combine, gll, hill_height,  # noqa: E402
-                      interp, locate, reynolds, stats_files)
+from ph_io import LY, combine, hill_height, stats_files  # noqa: E402
+from ph_stats import Lagrange, gll, interp, locate, reynolds  # noqa: E402
 
 XS = [0.5, 1.0, 2.0, 3.0, 4.0, 6.0]
 # nanmax/nanmin: points just outside the discrete wall interpolate to NaN

@@ -1,0 +1,57 @@
+### wall_summary.py
+Fritz: 10 windows, 150-600.002; 177 wall nodes, h = 0.0620...0.1090
+  1. zero crossings of <u_t>:        0.44(sep), 3.46(reatt)
+  2. zero crossings of C_f (model):  0.44(sep), 3.47(reatt); C_f min (bubble) -0.0045, max (windward) 0.0376 at x = 8.63
+  3. C_f from <|tau_w|>: min (bubble) -0.0079, max (windward) 0.0385
+  4. mean <|tau_w|> hill 0.00312, alpha spike ratio 1.6
+  5. per window (8 of >= 40): sep 0.44 +- 0.00, reatt 3.43 +- 0.11 (range 3.07...3.90)
+Alex: 9 windows, 150-600.001; 177 wall nodes, h = 0.0620...0.1090
+  1. zero crossings of <u_t>:        0.44(sep), 3.64(reatt)
+  2. zero crossings of C_f (model):  0.44(sep), 3.62(reatt); C_f min (bubble) -0.0045, max (windward) 0.0363 at x = 8.63
+  3. C_f from <|tau_w|>: min (bubble) -0.0075, max (windward) 0.0372
+  4. mean <|tau_w|> hill 0.00307, alpha spike ratio 1.8
+  5. per window (9 of >= 40): sep 0.44 +- 0.00, reatt 3.64 +- 0.04 (range 3.39...3.82)
+
+### wall_dpds_check.py
+fritz: 10 windows, 150-600.002, 22 hill-wall elements, 21 element-boundary nodes
+  element boundaries: max |jump <dp/ds>| = 2.389e-04 (mean |<dp/ds>| = 8.947e-02), max |jump <alpha>| = 4.291e-05
+  crest     x/h 0.0-0.4: model <|<dp/ds>|> = 0.1309, mean pressure <|d<p>/ds|> = 0.1549, ratio model/mean = 0.85, <alpha> = 0.776
+  bubble    x/h 0.5-3.0: model <|<dp/ds>|> = 0.0514, mean pressure <|d<p>/ds|> = 0.0694, ratio model/mean = 0.74, <alpha> = 0.775
+  recovery  x/h 4.0-7.0: model <|<dp/ds>|> = 0.0100, mean pressure <|d<p>/ds|> = 0.0426, ratio model/mean = 0.24, <alpha> = 0.740
+  windward  x/h 8.3-8.8: model <|<dp/ds>|> = 0.6274, mean pressure <|d<p>/ds|> = 0.6273, ratio model/mean = 1.00, <alpha> = 0.912
+alex: 9 windows, 150-600.001, 22 hill-wall elements, 21 element-boundary nodes
+  element boundaries: max |jump <dp/ds>| = 2.396e-04 (mean |<dp/ds>| = 8.744e-02), max |jump <alpha>| = 4.476e-05
+  crest     x/h 0.0-0.4: model <|<dp/ds>|> = 0.1213, mean pressure <|d<p>/ds|> = 0.1434, ratio model/mean = 0.85, <alpha> = 0.778
+  bubble    x/h 0.5-3.0: model <|<dp/ds>|> = 0.0528, mean pressure <|d<p>/ds|> = 0.0655, ratio model/mean = 0.81, <alpha> = 0.777
+  recovery  x/h 4.0-7.0: model <|<dp/ds>|> = 0.0107, mean pressure <|d<p>/ds|> = 0.0434, ratio model/mean = 0.25, <alpha> = 0.738
+  windward  x/h 8.3-8.8: model <|<dp/ds>|> = 0.6029, mean pressure <|d<p>/ds|> = 0.5998, ratio model/mean = 1.01, <alpha> = 0.911
+
+### ph_forces.py
+forces_fritz: t >= 150, windows of 50, H_mean = 2.8226
+  hill wall, pressure drag Fx_p    0.05677 +- 0.00103  (9 windows)
+  hill wall, skin friction Fx_v    0.00253 +- 0.00012  (9 windows)
+  top wall, skin friction Fx_v     0.00860 +- 0.00008  (9 windows)
+  forcing <f>                      0.01190 +- 0.00018  (9 windows)
+  balance <Fx3 + Fx4>/(2 H f)      1.011
+forces_alex: t >= 150, windows of 50, H_mean = 2.8226
+  hill wall, pressure drag Fx_p    0.05591 +- 0.00077  (9 windows)
+  hill wall, skin friction Fx_v    0.00234 +- 0.00005  (9 windows)
+  top wall, skin friction Fx_v     0.00874 +- 0.00008  (9 windows)
+  forcing <f>                      0.01174 +- 0.00013  (9 windows)
+  balance <Fx3 + Fx4>/(2 H f)      1.011
+
+### ph_stats.py
+fritz: 10 windows, 150-200.001, 200.001-250.001, 250.001-300.001, 300.001-350.001, 350.001-400.001, 400.001-450.002, 450.002-489.532, 489.532-500, 500-550.001, 550.001-600.002
+  x/h = 0.50: min <u> -0.1092, max u'u' 0.1167, max -u'v' 0.0441, max v'v' 0.0416, points outside 0
+  x/h = 1.00: min <u> -0.1242, max u'u' 0.0997, max -u'v' 0.0491, max v'v' 0.0647, points outside 0
+  x/h = 2.00: min <u> -0.2092, max u'u' 0.0893, max -u'v' 0.0395, max v'v' 0.0573, points outside 0
+  x/h = 3.00: min <u> -0.0952, max u'u' 0.0909, max -u'v' 0.0340, max v'v' 0.0515, points outside 0
+  x/h = 4.00: min <u> +0.0048, max u'u' 0.0788, max -u'v' 0.0281, max v'v' 0.0438, points outside 0
+  x/h = 6.00: min <u> +0.0841, max u'u' 0.0620, max -u'v' 0.0213, max v'v' 0.0322, points outside 0
+alex: 9 windows, 150-200, 200-250, 250-300, 300-350.002, 350.002-400.003, 400.003-450.001, 450.001-500, 500-550, 550-600.001
+  x/h = 0.50: min <u> -0.1110, max u'u' 0.1129, max -u'v' 0.0417, max v'v' 0.0386, points outside 0
+  x/h = 1.00: min <u> -0.1256, max u'u' 0.0965, max -u'v' 0.0461, max v'v' 0.0591, points outside 0
+  x/h = 2.00: min <u> -0.2109, max u'u' 0.0856, max -u'v' 0.0365, max v'v' 0.0533, points outside 0
+  x/h = 3.00: min <u> -0.1189, max u'u' 0.0847, max -u'v' 0.0332, max v'v' 0.0506, points outside 0
+  x/h = 4.00: min <u> -0.0128, max u'u' 0.0775, max -u'v' 0.0285, max v'v' 0.0424, points outside 0
+  x/h = 6.00: min <u> +0.0840, max u'u' 0.0588, max -u'v' 0.0204, max v'v' 0.0318, points outside 0

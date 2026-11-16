@@ -7,7 +7,7 @@ from pysemtools.datatypes.field import FieldRegistry
 from pysemtools.io.ppymech.neksuite import pynekread
 
 sys.path.insert(0, sys.argv[2])
-from wall_dpds_check import read_fld   # noqa: E402
+from ph_io import read_fld   # noqa: E402
 
 fname = sys.argv[1]
 comm = MPI.COMM_WORLD

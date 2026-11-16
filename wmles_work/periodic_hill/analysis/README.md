@@ -26,14 +26,28 @@ also holds the coordinates.
 
 | script | what it does | example |
 |---|---|---|
-| `ph_stats.py` | mean velocity and Reynolds stresses along x = const; averages all windows (weighted by length), optionally from `--from-time` on; CSV output | `ph_stats.py RUN 150 --from-time 200 --out prof.csv` |
+| `ph_stats.py` | mean velocity and Reynolds stresses along x = const; averages all windows (weighted by length), optionally from `--from-time` on; CSV output | `ph_stats.py RUN 150 --x 0.5,1,2,3,4,6 --out prof.csv` |
+| `wall_summary.py` | separation and reattachment (sign of the mean wall-parallel velocity at the sampling point, and of C_f reconstructed with the Duprat model), C_f extrema, mean wall shear stress, reattachment per window with standard error | `wall_summary.py RUN 150 --out wall.csv` |
+| `wall_dpds_check.py` | dp/ds used by the Duprat model against the gradient of the mean pressure, per wall region | `wall_dpds_check.py RUN 150` |
 | `gpu_cpu_windows.py` | compares two runs window by window: peaks of u'u', -u'v', v'v' and min <u> at x/h 0.5...6, with standard errors from the scatter of the windows | `gpu_cpu_windows.py --run CPU dirA 150 --run GPU dirB 150` |
-| `wall_summary.py` | separation and reattachment (sign change of the mean wall-parallel velocity at the sampling row), mean wall shear stress, alpha spikes at element boundaries | `wall_summary.py RUN1 RUN2` |
-| `wall_dpds_check.py` | dp/ds used by the Duprat model against the gradient of the mean pressure, per wall region; also holds the file reader `read_fld` | `wall_dpds_check.py RUN1 RUN2` |
+| `ph_forces.py` | time-averaged forces on both walls, forcing and momentum balance, from the CSV files of `../forces_from_log.py` | `ph_forces.py FORCEDIR --from-time 150` |
+
+Modules used by the scripts:
+
+- `ph_io.py`: hill geometry, the file reader `read_fld`, the grouping of the
+  files into series and the averaging of the windows (`combine`).
+- `duprat_model.py`: the Duprat wall model in numpy (same equations as the
+  Neko kernel, including the reversed wall shear stress); run it directly to
+  compare it with the reference values of the unit tests.
 
 START is the time at which the statistics start (`start_time` of the stats
 components). After a restart, give the restart time as well, e.g.
-`150,483.3943`: a restarted run starts a new averaging window there.
+`150,489.53`: a restarted run starts a new averaging window there. The
+restart time is the time of the checkpoint, i.e. the last time of the
+previous job.
+
+Put the `fluid_stats2d*` and `wall_stats2d*` files of a run (both jobs, with
+the `.nek5000` files) into one directory.
 
 ## How the profiles are computed (`ph_stats.py`)
 
@@ -54,7 +68,7 @@ flat floor inside an element) get NaN and are reported as "points outside".
 [pySEMTools](https://github.com/ExtremeFLOW/pySEMTools) (needs mpi4py) is
 used as an independent check:
 
-- `check_reader.py FILE ANALYSIS_DIR`: `read_fld` against `pynekread`. On
+- `check_reader.py FILE ANALYSIS_DIR`: `read_fld` (ph_io.py) against `pynekread`. On
   12 Nov 2026 identical for all 11 fields of a `fluid_stats2d` file.
 - `check_interp.py FILE PROFILES.csv OUTDIR`: the profiles of `ph_stats.py`
   against the pySEMTools probes. The probes need 3D elements, so the 2D

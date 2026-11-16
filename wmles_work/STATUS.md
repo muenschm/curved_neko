@@ -75,13 +75,27 @@ Open:
 - (C) Driving body force: `flow_rate_force` keeps its scale only as a local
   variable in `fluid_volflow`. Options are a core change or a constant
   `body_force` in the wall-model JSON. To be decided with the user.
-- Production runs of bcb0e5a started on 12 Nov 2026: Fritz (CPU) and Alex
-  (GPU, CUDA; first real GPU run of the new Duprat kernels). Compare them
-  with `analysis/gpu_cpu_windows.py`.
+- Production runs of bcb0e5a done (16 Nov 2026): Fritz (CPU, restart at
+  t = 489.53) and Alex (GPU, CUDA, first real GPU run of the new kernels),
+  both to t = 600 without NaN. Results and the comparison with the old
+  Duprat version and the reference in
+  `periodic_hill/results_Re10595_duprat_v2/README.md`. In short:
+  reattachment 3.43 +- 0.11 / 3.64 +- 0.04 (old 3.37 / 3.21, reference
+  4.2-4.3), separation unchanged 0.44; turbulence peaks closer to the
+  reference at all stations; bubble C_f now at the reference level; model
+  dp/ds now 0.74-1.0 of the mean gradient except the recovery region (0.24);
+  hill friction and forcing about 10 % lower; windward C_f max 15 % above
+  the reference.
 - `periodic_hill.f90` now copies the initial velocity to the device itself
   (needed since Neko #2831; on Alex the job failed with "Initial condition
   did not set u" before).
-- `analysis/ph_stats.py` rewritten and checked against pySEMTools; the
-  reader bug for files with several scalars is fixed (see
-  `analysis/README.md`). `ph_forces.py` is still to be rewritten
-  (`forces_from_log.py` covers the extraction).
+- `analysis/` rewritten (ph_io, ph_stats, ph_forces, wall_summary,
+  wall_dpds_check, duprat_model, gpu_cpu_windows) and checked against
+  pySEMTools; the reader bug for files with several scalars is fixed (see
+  `analysis/README.md`).
+- Report: new section for bcb0e5a; correct the statement on the cause of
+  the weak dp/ds (Stokes bound, not the projection); figures need the
+  Gloerfelt reference data and the old Duprat statistics (lost in the
+  container reset; ask the user).
+- Possible model output: a signed alpha (s_tau alpha) would show how often
+  the reversed branch is active instantaneously.

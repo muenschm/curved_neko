@@ -18,23 +18,19 @@ Reynolds stresses along vertical lines at the given x/h.
 Field layout of the 2D files: U = (<u>, <v>), P = <p>, T = <pp>,
 S = (<uu>, <vv>, <ww>, <uv>, <uw>, <vw>, <w>).
 
-The module also provides the helpers used by gpu_cpu_windows.py.
+Reading the files and averaging the windows is in ph_io.py; this module
+adds the interpolation (also used by gpu_cpu_windows.py).
 """
 import argparse
-import glob
 import os
-import re
 import sys
 
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from wall_dpds_check import hill_height, read_fld  # noqa: E402,F401
+from ph_io import LY, combine, hill_height, stats_files  # noqa: E402
 
-LX = 9.0
-LY = 3.035
 XS_DEFAULT = [0.05, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
-S_NAMES = ['uu', 'vv', 'ww', 'uv', 'uw', 'vw', 'w']
 
 
 def gll(n):
@@ -70,70 +66,6 @@ class Lagrange:
         """Derivative of the basis, by central differences."""
         return (self.basis(np.asarray(r) + h)
                 - self.basis(np.asarray(r) - h))/(2*h)
-
-
-def stats_files(d, prefix='fluid_stats2d'):
-    """The statistics files in d, as a list of series, each sorted by
-    number. A series is a set of files with the same name before .f."""
-    fs = glob.glob(os.path.join(d, prefix + '*.f[0-9]*'))
-    if not fs:
-        raise SystemExit(f'no {prefix}*.f* in {d}')
-    series = {}
-    for f in fs:
-        m = re.match(r'(.*)\.f(\d+)$', os.path.basename(f))
-        series.setdefault(m.group(1), []).append((int(m.group(2)), f))
-    return [[f for _, f in sorted(v)] for _, v in sorted(series.items())]
-
-
-def fields(r):
-    """The statistics of one file as a dict of (nel, ly, lx) arrays."""
-    f = {'u': r['U'][:, 0], 'v': r['U'][:, 1], 'p': r['P'], 'pp': r['T']}
-    for k, name in enumerate(S_NAMES):
-        f[name] = r['S'][:, k]
-    return f
-
-
-def combine(series, start, from_time=None):
-    """Read all windows and average them.
-
-    Returns (geo, mean, windows, info): geo has the coordinates 'x', 'y'
-    (nel, ly, lx) and 'lx'; mean is the length-weighted average of the
-    windows used; windows is a list of (t_begin, t_end, fields); info lists
-    the windows skipped and why."""
-    start = sorted(start)
-    geo, windows, info = None, [], []
-    for files in series:
-        prev = None
-        for f in files:
-            r = read_fld(f)
-            if 'X' in r and geo is None:
-                geo = {'x': r['X'][:, 0], 'y': r['X'][:, 1], 'lx': r['lx'],
-                       'ids': r['ids']}
-            b = r['time']
-            begins = [s for s in start if s < b]
-            if not begins:
-                info.append(f'{os.path.basename(f)}: t = {b:g} before start')
-                prev = b
-                continue
-            a = max(begins[-1], prev if prev is not None else -np.inf)
-            prev = b
-            if not any(np.any(r[k] != 0) for k in ('U', 'S') if k in r):
-                info.append(f'{os.path.basename(f)}: empty')
-                continue
-            if b - a <= 1e-6*max(1.0, abs(b)):
-                info.append(f'{os.path.basename(f)}: zero length')
-                continue
-            windows.append((a, b, fields(r)))
-    if geo is None:
-        raise SystemExit('no coordinates found in the statistics files')
-    windows.sort(key=lambda w: w[0])
-    used = [w for w in windows if from_time is None or w[0] >= from_time]
-    if not used:
-        raise SystemExit('no averaging window left')
-    tot = sum(b - a for a, b, _ in used)
-    mean = {k: sum((b - a)*f[k] for a, b, f in used)/tot
-            for k in used[0][2]}
-    return geo, mean, used, info
 
 
 def reynolds(f):
