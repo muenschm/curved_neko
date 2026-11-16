@@ -1,0 +1,25 @@
+### wall_summary.py
+Alex: 9 windows, 150-600.002; 177 wall nodes, h = 0.0620...0.1090
+  1. zero crossings of <u_t>:        0.45(sep), 3.21(reatt)
+  2. zero crossings of C_f (model):  0.48(sep), 3.21(reatt); C_f min (bubble) -0.0013, max (windward) 0.0306 at x = 8.63
+  3. C_f from <|tau_w|>: min (bubble) -0.0029, max (windward) 0.0318
+  4. mean <|tau_w|> hill 0.00214, alpha spike ratio 17.0
+     mean C_f (x component): from <|tau_w|> 0.00284, model from mean flow 0.00236
+  5. per window (9 of >= 40): sep 0.45 +- 0.00, reatt 3.21 +- 0.08 (range 2.77...3.58)
+
+### wall_dpds_check.py
+old_alex: 9 windows, 150-600.002, 22 hill-wall elements, 21 element-boundary nodes
+  element boundaries: max |jump <dp/ds>| = 1.987e-03 (mean |<dp/ds>| = 4.694e-02), max |jump <alpha>| = 1.801e-03
+  crest     x/h 0.0-0.4: model <|<dp/ds>|> = 0.0717, mean pressure <|d<p>/ds|> = 0.1219, ratio model/mean = 0.59, <alpha> = 0.833
+  bubble    x/h 0.5-3.0: model <|<dp/ds>|> = 0.0051, mean pressure <|d<p>/ds|> = 0.0720, ratio model/mean = 0.07, <alpha> = 0.825
+  recovery  x/h 4.0-7.0: model <|<dp/ds>|> = 0.0055, mean pressure <|d<p>/ds|> = 0.0450, ratio model/mean = 0.12, <alpha> = 0.820
+  windward  x/h 8.3-8.8: model <|<dp/ds>|> = 0.4024, mean pressure <|d<p>/ds|> = 0.5930, ratio model/mean = 0.68, <alpha> = 0.918
+
+### ph_stats.py
+old_alex: 9 windows, 150-200.002, 200.002-250.002, 250.002-300, 300-350.001, 350.001-400.002, 400.002-450, 450-500.001, 500.001-550.002, 550.002-600.002
+  x/h = 0.50: min <u> -0.1115, max u'u' 0.1271, max -u'v' 0.0465, max v'v' 0.0441, points outside 0
+  x/h = 1.00: min <u> -0.1369, max u'u' 0.1084, max -u'v' 0.0519, max v'v' 0.0691, points outside 0
+  x/h = 2.00: min <u> -0.1967, max u'u' 0.1027, max -u'v' 0.0442, max v'v' 0.0641, points outside 0
+  x/h = 3.00: min <u> -0.0837, max u'u' 0.0989, max -u'v' 0.0390, max v'v' 0.0582, points outside 0
+  x/h = 4.00: min <u> +0.0140, max u'u' 0.0872, max -u'v' 0.0327, max v'v' 0.0497, points outside 0
+  x/h = 6.00: min <u> +0.1324, max u'u' 0.0636, max -u'v' 0.0219, max v'v' 0.0347, points outside 0
