@@ -27,6 +27,12 @@ Commits:
     false (it is not in the paper; it came from the student's code);
   - the update kernels no longer filter (`eps` replaced by the flag);
   - all backends, unit tests with SciPy references, user guide, schema.
+- f854f9b (16 Nov 2026, on the user's request): Stokes limit removed from
+  the code entirely; the update kernels only project (no nu, rho, h, flag).
+  Duprat test 8/8 in dp and sp, full dp suite 59/59, findent/flint clean,
+  all device kernels re-checked by emulation and PoCL (unchanged results).
+  Same numerics as bcb0e5a with the limit off, so the production runs
+  stay valid.
 
 Tests of bcb0e5a (see `duprat_tests/README.md`):
 - dp and sp builds with the CI flags; Duprat unit test 8/8 in dp and sp;

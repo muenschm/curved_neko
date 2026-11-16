@@ -2,7 +2,9 @@
 
 Checks for the branch `feature/duprat-local-dpds` of muenschm/neko: the
 reversed wall shear stress, sign(tau_w) in Eq. (5) of Duprat et al. (2011),
-and the optional `stokes_limit`.
+and the projection of the filtered gradient (the Stokes limit was removed in
+f854f9b; the drivers were adapted to the new update-kernel signature and give
+the same results).
 
 - `duprat_reference.py`: SciPy reference values for
   `tests/unit/duprat/test_duprat.pf` (adaptive quadrature of U*, brentq for

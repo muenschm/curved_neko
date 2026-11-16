@@ -135,8 +135,8 @@ clarify.
     \end{itemize}
   \item \textbf{Duprat closer to the paper} (Section~\ref{sec:dupv2},
     branch \code{feature/duprat-local-dpds}): gradient averaged across
-    element faces, vector filter, Stokes limit optional (off by default),
-    reversed wall shear stress ($\mathrm{sign}(\tau_w)$ in Eq.~(5)).
+    element faces, vector filter, Stokes limit removed, reversed wall shear
+    stress ($\mathrm{sign}(\tau_w)$ in Eq.~(5)).
     \begin{itemize}
       \item \emph{Verification:} unit tests with new references, all
         device kernels checked against the CPU kernel, first GPU production
@@ -1570,10 +1570,11 @@ Independently of the model, the coarse wall-normal resolution near the crest
 %=====================================================================
 
 The follow-up branch \code{feature/duprat-local-dpds} (on top of the Duprat
-pull request, ExtremeFLOW/neko\#2888) changes the \code{local} mode in two
+pull request, ExtremeFLOW/neko\#2888) changes the \code{local} mode in three
 commits. 50b9589 implements the first two improvements proposed in
 Section~\ref{sec:hilldup-disc}; bcb0e5a brings the model closer to the
-paper. The driving body force (the third proposal) is not included: the
+paper; f854f9b removes the Stokes limit, which bcb0e5a had made optional and
+switched off. The driving body force (the third proposal) is not included: the
 scale of \code{flow\_rate\_force} is a local variable of the flow-rate
 routine and not accessible to the wall model.
 
@@ -1590,12 +1591,12 @@ routine and not accessible to the wall model.
     filtered with the moving average of Eq.~\eqref{eq:ema} and then projected
     on the current wall-parallel flow direction. Before, the projections on
     the instantaneous direction were filtered.
-  \item \textbf{Stokes limit optional.} The limit
+  \item \textbf{Stokes limit removed.} The limit
     $|\dpds| \le (\rho/\nu)(u\nu/h)^{3/2}$ is not part of the paper; it comes
-    from the original code. It is now the option
-    \code{pressure\_gradient.stokes\_limit}, default \code{false}. A coarse
-    test (below) showed that this limit, not the projection, capped $\dpds$
-    along most of the wall. Section~\ref{sec:hilldup-dpds} attributed the
+    from the original code. A coarse test (below) showed that this limit, not
+    the projection, capped $\dpds$ along most of the wall. With the face
+    average and the vector filter the runs are stable without it, so it was
+    removed (first as an option, off by default, then from the code). Section~\ref{sec:hilldup-dpds} attributed the
     weak gradient to the cancellation of the projections; that was wrong.
   \item \textbf{Reversed wall shear stress.} Eq.~(5) of the paper has
     $\mathrm{sign}(\tau_w)\,\alpha$ where Eq.~\eqref{eq:duprat-ode} has
@@ -1616,8 +1617,8 @@ routine and not accessible to the wall model.
     gradient, both directions give a stress of the same sign.
 \end{enumerate}
 All five backends (CPU, CUDA, HIP, OpenCL, Metal) are changed; the update
-kernels no longer filter, their weight argument is replaced by the flag of
-the limit. User guide and JSON schema are updated.
+kernels only project the filtered gradient. The case-file interface of the
+\code{local} mode is unchanged. User guide and JSON schema are updated.
 
 \subsection{Verification}
 
@@ -1625,7 +1626,7 @@ the limit. User guide and JSON schema are updated.
   \item \textbf{Unit tests:} the Duprat suite (8 tests) has new SciPy
     references for $U^*$ with $s_\tau = -1$, for a strongly reversed case,
     for two cases just below and above $u_\mathrm{sep}$, and for the
-    projection with and without the limit. It passes in single and double
+    projection. It passes in single and double
     precision with the CI flags, and so does the full unit suite (59
     tests). \code{findent} is clean; the flint score is unchanged (10.00).
   \item \textbf{Device kernels:} the CUDA, HIP and Metal kernels were
@@ -1664,7 +1665,7 @@ bcb0e5a (also reversed stress) & 0.79 & 5.06 & 0.88 & 0.56 & 0.63 & 1.06 \\
 \subsection{Production runs}
 
 The case of Section~\ref{sec:hilldup} was run unchanged with bcb0e5a
-(\code{stokes\_limit} not set, i.e.\ off), to $t = 600$, statistics from
+(Stokes limit off; f854f9b computes the same), to $t = 600$, statistics from
 $t = 150$ in windows of 50:
 \begin{itemize}
   \item Fritz (CPU, 72 ranks), two jobs, restart at $t = 489.53$;
@@ -1919,8 +1920,8 @@ grid~A ($y^+_f = 5$). Open points:
         Reichardt observation.
     \end{itemize}
   \item \textbf{Duprat \code{local} mode:} the vector filter, the face
-    average, the optional Stokes limit and the reversed wall shear stress
-    are implemented and tested on the hill (Section~\ref{sec:dupv2}).
+    average, the removal of the Stokes limit and the reversed wall shear
+    stress are implemented and tested on the hill (Section~\ref{sec:dupv2}).
     The branch becomes a pull request once ExtremeFLOW/neko\#2888 is
     merged. Still open:
     \begin{itemize}

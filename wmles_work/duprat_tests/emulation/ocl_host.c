@@ -78,21 +78,19 @@ int main(int argc, char **argv) {
     }
     clReleaseKernel(kr);
   }
-  for (int lim = 0; lim < 2; ++lim) {
+  {
     cl_kernel ku = clCreateKernel(prg, "duprat_update_dpds_kernel", &err); CK(err);
-    int idx[12] = {10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8};
-    for (int k = 0; k < 12; ++k) CK(clSetKernelArg(ku, k, sizeof(cl_mem), &d[idx[k]]));
-    CK(clSetKernelArg(ku, 12, sizeof(int), &lim));
-    CK(clSetKernelArg(ku, 13, sizeof(cl_mem), &dd[lim]));
-    CK(clSetKernelArg(ku, 14, sizeof(int), &n));
+    int idx[9] = {10, 11, 12, 0, 1, 2, 3, 4, 5};
+    for (int k = 0; k < 9; ++k) CK(clSetKernelArg(ku, k, sizeof(cl_mem), &d[idx[k]]));
+    CK(clSetKernelArg(ku, 9, sizeof(cl_mem), &dd[0]));
+    CK(clSetKernelArg(ku, 10, sizeof(int), &n));
     CK(clEnqueueNDRangeKernel(q, ku, 1, NULL, &gsz, &lsz, 0, NULL, NULL));
     CK(clFinish(q));
-    CK(clEnqueueReadBuffer(q, dd[lim], CL_TRUE, 0, rs * n, o4[lim], 0, NULL, NULL));
+    CK(clEnqueueReadBuffer(q, dd[0], CL_TRUE, 0, rs * n, o4[0], 0, NULL, NULL));
     clReleaseKernel(ku);
   }
   for (int i = 0; i < n; ++i)
-    fprintf(o, "%.17e %.17e\n", rs == 8 ? ((double *)o4[0])[i] : (double)((float *)o4[0])[i],
-            rs == 8 ? ((double *)o4[1])[i] : (double)((float *)o4[1])[i]);
+    fprintf(o, "%.17e\n", rs == 8 ? ((double *)o4[0])[i] : (double)((float *)o4[0])[i]);
   fclose(o);
   return 0;
 }

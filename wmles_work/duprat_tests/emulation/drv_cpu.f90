@@ -43,13 +43,9 @@ program drv_cpu
      end do
   end do
   d0 = 0.123_rp
-  d1 = 0.123_rp
-  call duprat_update_dpds_cpu(gx, gy, gz, u, v, w, nx, ny, nz, nu, rho, h, &
-       .false., d0, n)
-  call duprat_update_dpds_cpu(gx, gy, gz, u, v, w, nx, ny, nz, nu, rho, h, &
-       .true., d1, n)
+  call duprat_update_dpds_cpu(gx, gy, gz, u, v, w, nx, ny, nz, d0, n)
   do i = 1, n
-     write(11, '(2ES26.17)') d0(i), d1(i)
+     write(11, '(ES26.17)') d0(i)
   end do
   close(11)
 end program drv_cpu

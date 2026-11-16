@@ -43,14 +43,9 @@ template <typename T> void run(const char *out) {
   }
   duprat_update_dpds<T>(c[10].data(), c[11].data(), c[12].data(), c[0].data(),
                         c[1].data(), c[2].data(), c[3].data(), c[4].data(),
-                        c[5].data(), c[6].data(), c[7].data(), c[8].data(), 0,
-                        d0.data(), n);
-  duprat_update_dpds<T>(c[10].data(), c[11].data(), c[12].data(), c[0].data(),
-                        c[1].data(), c[2].data(), c[3].data(), c[4].data(),
-                        c[5].data(), c[6].data(), c[7].data(), c[8].data(), 1,
-                        d1.data(), n);
+                        c[5].data(), d0.data(), n);
   for (int i = 0; i < n; ++i)
-    fprintf(o, "%.17e %.17e\n", (double)d0[i], (double)d1[i]);
+    fprintf(o, "%.17e\n", (double)d0[i]);
   fclose(o);
 }
 
