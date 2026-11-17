@@ -10,7 +10,9 @@
   instead of a follow-up PR). Checked before the push on the branch merged
   with the current develop (74c61b0): no conflicts, unit suite 60/60 in dp
   and sp, coarse hill smoke run stable. New PR description and a comment
-  for the colleagues in `pr_texts/` (to be posted by the user).
+  for the colleagues in `pr_texts/`, both posted by the user on
+  17 Nov 2026. Next: CI result and review comments on #2888 (the session
+  cannot read ExtremeFLOW; the user forwards them).
 - Whichever is merged second needs a merge of `develop`, and
   `WALLM_KNOWN_TYPES` then has 7 entries.
 
