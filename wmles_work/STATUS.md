@@ -13,6 +13,17 @@
   for the colleagues in `pr_texts/`, both posted by the user on
   17 Nov 2026. Next: CI result and review comments on #2888 (the session
   cannot read ExtremeFLOW; the user forwards them).
+- Review comment of timofeymukha (Gauss-Legendre tables in duprat_cpu.f90,
+  "can be taken from the common library"): option A implemented in 7cd115e
+  (PR head since 17 Nov 2026): the rule comes from speclib's zwgl, computed
+  once in the model and passed to the kernels of all backends; new unit test
+  for the rule. The commit also regenerates src/.depends (it lacked gs_ops,
+  vector_math since 50b9589; the CI dependency check would have failed).
+  Checks: dp/sp 59/59 on the branch, merged with develop: no conflicts,
+  make depend reproduces the merged .depends, Duprat test 9/9; device
+  kernels re-checked (emulation, PoCL); coarse hill smoke run stable. Reply
+  text in `pr_texts/upstream_pr_duprat_reply_gauss_rule.md` (to be posted
+  by the user).
 - Whichever is merged second needs a merge of `develop`, and
   `WALLM_KNOWN_TYPES` then has 7 entries.
 

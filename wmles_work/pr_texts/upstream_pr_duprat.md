@@ -28,7 +28,7 @@ Duprat et al., "A wall-layer model for large-eddy simulations of turbulent flows
 
 - **Velocity scale:** the extended velocity scale u_τp = √(u_τ² + u_p²), with the pressure velocity u_p = |(ν/ρ) ∂p/∂s|^{1/3}.
 - **Eddy viscosity:** a mixing-length eddy viscosity that depends on α = u_τ²/u_τp².
-- **Velocity profile:** U*(y*) is obtained by integrating the thin-boundary-layer equation, dU*/dy* = (s_p (1−α)^{3/2} y* + s_τ α)/(1 + ν_t/ν), across the wall layer, using a composite Gauss–Legendre rule in ln(1 + y*). s_p and s_τ are the signs of the pressure gradient and of the wall shear stress relative to the flow at the sampling point.
+- **Velocity profile:** U*(y*) is obtained by integrating the thin-boundary-layer equation, dU*/dy* = (s_p (1−α)^{3/2} y* + s_τ α)/(1 + ν_t/ν), across the wall layer, using a composite Gauss–Legendre rule in ln(1 + y*) (12 sub-intervals with 5 points each; the rule is computed once with `zwgl` from `speclib` and passed to the kernels of all backends). s_p and s_τ are the signs of the pressure gradient and of the wall shear stress relative to the flow at the sampling point.
 - **Reversed wall shear stress (s_τ = −1, Eq. 5 of the paper):** under an adverse gradient, the separation profile (α = 0) gives the velocity u_sep = u_p U*(h u_p/ν) at the sampling point. If the sampled velocity is smaller, the near-wall flow is reversed and the stress points along the sampled velocity. The stress passes zero continuously at u = u_sep.
 - **Friction velocity:** u_τ is found with a bracketed, safeguarded Newton method. The residual is not monotone for favourable gradients.
 
@@ -96,7 +96,8 @@ The documentation now says this and links to the page on mixed boundary-conditio
   - zero wall-parallel velocity;
   - reversed wall shear stress: a strongly reversed case (direction and density scaling), and two cases just below and above u_sep, where the stress is small and changes sign;
   - the previous stress used as the initial guess, on both branches;
-  - the projection of the filtered pressure gradient on the flow direction.
+  - the projection of the filtered pressure gradient on the flow direction;
+  - the Gauss–Legendre rule from `speclib` against the 5-point rule in closed form.
 
   The composite quadrature agrees with the adaptive reference to ≤ 7·10⁻¹⁰ in the tested range. Tolerances follow `NEKO_EPS`.
 

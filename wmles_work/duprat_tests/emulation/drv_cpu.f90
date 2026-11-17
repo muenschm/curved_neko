@@ -1,7 +1,8 @@
 ! Run the CPU kernels of the Duprat model on the inputs in inputs.txt.
 program drv_cpu
   use num_types, only : rp
-  use duprat_cpu, only : duprat_compute_cpu, duprat_update_dpds_cpu
+  use duprat_cpu, only : duprat_compute_cpu, duprat_update_dpds_cpu, &
+       duprat_gauss_rule, DUPRAT_N_GL
   implicit none
   integer :: n, i, k
   real(kind=rp), allocatable :: u(:), v(:), w(:), nx(:), ny(:), nz(:), nu(:)
@@ -9,6 +10,7 @@ program drv_cpu
   real(kind=rp), allocatable :: tx(:), ty(:), tz(:), al(:), d0(:), d1(:)
   real(kind=rp), allocatable :: gtx(:), gty(:), gtz(:)
   double precision :: buf(16)
+  real(kind=rp) :: gl_x(DUPRAT_N_GL), gl_w(DUPRAT_N_GL)
   character(len=64) :: outname
 
   call get_command_argument(1, outname)
@@ -26,17 +28,20 @@ program drv_cpu
      gtx(i) = buf(14); gty(i) = buf(15); gtz(i) = buf(16)
   end do
   close(10)
+  call duprat_gauss_rule(gl_x, gl_w, DUPRAT_N_GL)
   open(11, file=trim(outname), status='replace')
   ! tstep 1 (own guess), then tstep 5 with the random guesses
   do k = 1, 2
      if (k .eq. 1) then
         tx = 0; ty = 0; tz = 0
         call duprat_compute_cpu(u, v, w, nx, ny, nz, nu, rho, h, dpds, &
-             tx, ty, tz, al, n, 0.41_rp, 0.78_rp, 17.0_rp, 1)
+             tx, ty, tz, al, n, 0.41_rp, 0.78_rp, 17.0_rp, gl_x, gl_w, &
+             DUPRAT_N_GL, 1)
      else
         tx = gtx; ty = gty; tz = gtz
         call duprat_compute_cpu(u, v, w, nx, ny, nz, nu, rho, h, dpds, &
-             tx, ty, tz, al, n, 0.41_rp, 0.78_rp, 17.0_rp, 5)
+             tx, ty, tz, al, n, 0.41_rp, 0.78_rp, 17.0_rp, gl_x, gl_w, &
+             DUPRAT_N_GL, 5)
      end if
      do i = 1, n
         write(11, '(4ES26.17)') tx(i), ty(i), tz(i), al(i)

@@ -5,6 +5,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+// 5-point Gauss-Legendre rule on [0, 1] in closed form
+static void gauss5(double *x, double *w) {
+  const double r = sqrt(10.0 / 7.0), s70 = sqrt(70.0);
+  const double a = sqrt(5.0 - 2.0 * r) / 6.0, b = sqrt(5.0 + 2.0 * r) / 6.0;
+  x[0] = 0.5 - b; x[1] = 0.5 - a; x[2] = 0.5; x[3] = 0.5 + a; x[4] = 0.5 + b;
+  w[0] = w[4] = (322.0 - 13.0 * s70) / 1800.0;
+  w[1] = w[3] = (322.0 + 13.0 * s70) / 1800.0;
+  w[2] = 64.0 / 225.0;
+}
 #define CK(x) do { cl_int e_ = (x); if (e_ != CL_SUCCESS) { fprintf(stderr, "CL error %d at %d\n", e_, __LINE__); exit(1);} } while (0)
 
 static char *slurp(const char *p) {
@@ -55,6 +65,12 @@ int main(int argc, char **argv) {
   for (int j = 0; j < 2; ++j) { dd[j] = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, rs * n, init, &err); CK(err); }
   for (int j = 0; j < 4; ++j) o4[j] = malloc(rs * n);
   double kd[3] = {0.41, 0.78, 17.0}; float kf[3] = {0.41f, 0.78f, 17.0f};
+  double gx[5], gw[5]; gauss5(gx, gw);
+  void *hgx = malloc(rs * 5), *hgw = malloc(rs * 5);
+  for (int k = 0; k < 5; ++k) { if (rs == 8) { ((double *)hgx)[k] = gx[k]; ((double *)hgw)[k] = gw[k]; } else { ((float *)hgx)[k] = (float)gx[k]; ((float *)hgw)[k] = (float)gw[k]; } }
+  cl_mem dgx = clCreateBuffer(ctx, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, rs * 5, hgx, &err); CK(err);
+  cl_mem dgw = clCreateBuffer(ctx, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, rs * 5, hgw, &err); CK(err);
+  int ngl = 5;
   const size_t gsz = 256 * ((n + 255) / 256), lsz = 256;
   FILE *o = fopen(argv[3], "w");
   for (int pass = 0; pass < 2; ++pass) {
@@ -67,7 +83,9 @@ int main(int argc, char **argv) {
     CK(clSetKernelArg(kr, 12, sizeof(cl_mem), &tz)); CK(clSetKernelArg(kr, 13, sizeof(cl_mem), &al));
     CK(clSetKernelArg(kr, 14, sizeof(int), &n));
     for (int k = 0; k < 3; ++k) CK(clSetKernelArg(kr, 15 + k, rs, rs == 8 ? (void *)&kd[k] : (void *)&kf[k]));
-    int tstep = pass ? 5 : 1; CK(clSetKernelArg(kr, 18, sizeof(int), &tstep));
+    CK(clSetKernelArg(kr, 18, sizeof(cl_mem), &dgx)); CK(clSetKernelArg(kr, 19, sizeof(cl_mem), &dgw));
+    CK(clSetKernelArg(kr, 20, sizeof(int), &ngl));
+    int tstep = pass ? 5 : 1; CK(clSetKernelArg(kr, 21, sizeof(int), &tstep));
     CK(clEnqueueNDRangeKernel(q, kr, 1, NULL, &gsz, &lsz, 0, NULL, NULL));
     CK(clFinish(q));
     cl_mem outs[4] = {tx, ty, tz, al};
