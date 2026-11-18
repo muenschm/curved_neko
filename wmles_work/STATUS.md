@@ -22,8 +22,8 @@
   Checks: dp/sp 59/59 on the branch, merged with develop: no conflicts,
   make depend reproduces the merged .depends, Duprat test 9/9; device
   kernels re-checked (emulation, PoCL); coarse hill smoke run stable. Reply
-  text in `pr_texts/upstream_pr_duprat_reply_gauss_rule.md` (to be posted
-  by the user).
+  text in `pr_texts/upstream_pr_duprat_reply_gauss_rule.md`, posted by the
+  user on 18 Nov 2026.
 - Whichever is merged second needs a merge of `develop`, and
   `WALLM_KNOWN_TYPES` then has 7 entries.
 
