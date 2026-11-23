@@ -26,6 +26,24 @@
   user on 18 Nov 2026.
 - Whichever is merged second needs a merge of `develop`, and
   `WALLM_KNOWN_TYPES` then has 7 entries.
+- Check on 23 Nov 2026: #2884 is NOT merged yet (develop f4519fe has 5
+  entries and no Reichardt files; the Reichardt branch got a develop merge,
+  f1e485d). #2888 (7cd115e) merged with develop f4519fe: no conflicts, builds
+  in dp/sp, unit suite 60/60 in dp and sp, coarse Duprat hill run stable.
+- Prepared and tested (locally, not pushed) the merge of #2884 into
+  #2888 + develop (branch test/dup-reich, e0e7fc0). Git merges the factory
+  WITHOUT conflict to `WALLM_KNOWN_TYPES(6)` with 7 names, which does not
+  compile. Resolution, to be applied by whichever PR is merged second:
+  1. `src/wall_models/wall_model_fctry.f90`: `WALLM_KNOWN_TYPES(7)`;
+  2. user guide table, `wall_modelling.type`: `rough_log_law`, `spalding`,
+     `reichardt`, `duprat` (conflict);
+  3. `src/.depends` (conflict) and `.depends_device`: regenerate with
+     `./regen.sh && ./configure FC=mpif90 && cd src && make depend`
+     (makedepf90 3.0.1 reproduces the CI output exactly);
+  4. everything else (Makefile.am, tests, configure.ac, prgm_lib, schema,
+     CHANGELOG) merges correctly, each entry once.
+  Result: unit suite 61/61 in dp and sp, Duprat 9/9 and Reichardt 5/5,
+  coarse hill runs with both models stable.
 
 ## In progress: Duprat local-mode improvements
 
