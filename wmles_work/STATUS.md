@@ -3,9 +3,10 @@
 ## Upstream pull requests
 
 - Reichardt: [ExtremeFLOW/neko#2884](https://github.com/ExtremeFLOW/neko/pull/2884),
-  branch `feature/reichardt-wall-model` (head 7e9dc34).
+  branch `feature/reichardt-wall-model`; merged upstream on 23 Nov 2026
+  (develop be6a767).
 - Duprat: [ExtremeFLOW/neko#2888](https://github.com/ExtremeFLOW/neko/pull/2888),
-  branch `feature/duprat-wall-model` (head f854f9b since 16 Nov 2026: the
+  branch `feature/duprat-wall-model` (head 9544aee since 24 Nov 2026, f854f9b since 16 Nov 2026: the
   reworked local mode was fast-forwarded into the PR on the user's decision,
   instead of a follow-up PR). Checked before the push on the branch merged
   with the current develop (74c61b0): no conflicts, unit suite 60/60 in dp
@@ -24,8 +25,20 @@
   kernels re-checked (emulation, PoCL); coarse hill smoke run stable. Reply
   text in `pr_texts/upstream_pr_duprat_reply_gauss_rule.md`, posted by the
   user on 18 Nov 2026.
-- Whichever is merged second needs a merge of `develop`, and
-  `WALLM_KNOWN_TYPES` then has 7 entries.
+- #2884 (Reichardt) was merged upstream on 23 Nov 2026 (develop be6a767).
+  On 24 Nov 2026 develop was merged into #2888 as a normal merge commit
+  (9544aee, pushed fast-forward, no force push; PR head now 9544aee), with
+  the resolution prepared below: `WALLM_KNOWN_TYPES(7)`, both models in the
+  user-guide table, `src/.depends` regenerated with `make depend` (only the
+  Duprat lines differ from develop; `.depends_device` merged unchanged).
+  Checks on the merge commit: unit suite 61/61 in dp and sp (CI flags),
+  Duprat 9/9 and Reichardt 5/5, findent clean, coarse hill smoke runs with
+  both models stable (same end CFL as on 23 Nov). Texts for the PR
+  (description bullet, optional comment) in
+  `pr_texts/upstream_pr_duprat_update_reichardt_merge.md`.
+  `feature/duprat-local-dpds` still points to 7cd115e (not needed anymore).
+- Before the Reichardt merge: whichever is merged second needs a merge of
+  `develop`, and `WALLM_KNOWN_TYPES` then has 7 entries.
 - Check on 23 Nov 2026: #2884 is NOT merged yet (develop f4519fe has 5
   entries and no Reichardt files; the Reichardt branch got a develop merge,
   f1e485d). #2888 (7cd115e) merged with develop f4519fe: no conflicts, builds
